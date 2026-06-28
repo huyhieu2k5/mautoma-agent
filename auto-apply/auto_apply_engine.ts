@@ -19,12 +19,12 @@ import { createCapabilityRouter } from '../capability-router';
 import { createSkillOrchestrator } from '../skill-manager';
 import { cleanupAIArtifacts } from '../file-cleaner';
 import { createEvolutionEngine } from '../evolution';
-import { createTaskPlanner } from '../task-planner';
-import { createExecutor } from '../executor';
-import { createVerification } from '../verification';
-import { createMemoryManager } from '../memory-store';
-import { createErrorRecovery } from '../error-recovery';
-import { createCodeGraphAnalyzer } from '../codegraph';
+import { getTaskPlanner } from '../task-planner';
+import { getExecutor } from '../executor';
+import { createVerificationEngine } from '../verification';
+import { getMemoryManager } from '../memory-store';
+import { createErrorLearner } from '../error-recovery';
+import { createCodeGraphManager } from '../codegraph';
 
 export type CapabilityAxis =
   | 'computer_control'
@@ -230,7 +230,7 @@ async function execSkillInstall(req: string, ctx: AutoApplyContext): Promise<App
 
 async function execTaskPlan(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running task_plan...');
-  const planner = createTaskPlanner();
+  const planner = getTaskPlanner();
   const plan = planner.createPlan(req);
   ctx.verbose && console.log(`[auto-apply] Planned ${plan.steps.length} steps`);
   return {
@@ -243,7 +243,7 @@ async function execTaskPlan(req: string, ctx: AutoApplyContext): Promise<ApplySt
 
 async function execAnalyzeCode(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running analyze_code...');
-  const analyzer = createCodeGraphAnalyzer();
+  const analyzer = createCodeGraphManager();
   const root = process.cwd();
   const structure = analyzer.analyze(root, {
     depth: 2,
@@ -259,7 +259,7 @@ async function execAnalyzeCode(req: string, ctx: AutoApplyContext): Promise<Appl
 
 async function execRemember(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running remember...');
-  const memory = createMemoryManager();
+  const memory = getMemoryManager();
   const recent = await memory.getRecent(5);
   return {
     axis: 'remember',
@@ -287,7 +287,7 @@ async function execExecute(req: string, ctx: AutoApplyContext): Promise<ApplySte
 
 async function execVerify(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running verify...');
-  const verifier = createVerification();
+  const verifier = createVerificationEngine();
   return {
     axis: 'verify',
     action: 'Verification complete',
@@ -298,7 +298,7 @@ async function execVerify(req: string, ctx: AutoApplyContext): Promise<ApplyStep
 
 async function execRecover(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running recover...');
-  const recovery = createErrorRecovery();
+  const recovery = createErrorLearner();
   const patterns = await recovery.getErrorPatterns();
   return {
     axis: 'recover',

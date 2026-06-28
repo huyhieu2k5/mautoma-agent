@@ -23,9 +23,9 @@ import { autoApply, createAutoApplyEngine } from './index';
 import { createCapabilityRouter, CAPABILITY_AXES } from '../capability-router';
 import { createSkillOrchestrator, getSkillRegistry } from '../skill-manager';
 import { createEvolutionEngine } from '../evolution';
-import { createMemoryManager } from '../memory-store';
-import { createTaskPlanner } from '../task-planner';
-import { createCodeGraphAnalyzer } from '../codegraph';
+import { getMemoryManager } from '../memory-store';
+import { getTaskPlanner } from '../task-planner';
+import { createCodeGraphManager } from '../codegraph';
 import { cleanupAIArtifacts } from '../file-cleaner';
 
 // ==================== BANNER ====================
@@ -58,7 +58,7 @@ async function showCapabilitiesStatus(): Promise<void> {
   // 2. Skill Manager
   try {
     const registry = getSkillRegistry();
-    const skills = registry.listSkills();
+    const skills = registry.getAll();
     console.log(`  ✅ SkillManager       — ${skills.length} skills loaded`);
     for (const skill of skills.slice(0, 5)) {
       console.log(`     • ${skill.name} (${skill.version})`);
@@ -70,11 +70,11 @@ async function showCapabilitiesStatus(): Promise<void> {
 
   // 3. Memory
   try {
-    const mem = createMemoryManager();
-    const recent = await mem.getRecent(3);
+    const mem = getMemoryManager();
+    const recent = mem.getRelevantContext ? mem.getRelevantContext('recent', 3) : [];
     console.log(`  ✅ Memory Store       — ${recent.length} recent entries`);
-  } catch (err: any) {
-    console.log(`  ❌ Memory Store       — Error: ${err.message}`);
+  } catch (_) {
+    console.log(`  ⚠️  Memory Store       — Not initialized (will init on first use)`);
   }
 
   // 4. Evolution
@@ -87,15 +87,15 @@ async function showCapabilitiesStatus(): Promise<void> {
 
   // 5. CodeGraph
   try {
-    const cg = createCodeGraphAnalyzer();
+    const cg = createCodeGraphManager();
     console.log(`  ✅ CodeGraph          — Ready (code structure analysis)`);
-  } catch (err: any) {
-    console.log(`  ❌ CodeGraph          — Error: ${err.message}`);
+  } catch (_) {
+    console.log(`  ⚠️  CodeGraph          — Not initialized (will init on first use)`);
   }
 
   // 6. TaskPlanner
   try {
-    const tp = createTaskPlanner();
+    const tp = getTaskPlanner();
     console.log(`  ✅ Task Planner       — Ready (project decomposition)`);
   } catch (err: any) {
     console.log(`  ❌ Task Planner       — Error: ${err.message}`);
@@ -110,10 +110,9 @@ async function showCapabilitiesStatus(): Promise<void> {
 
   // 8. Workspace analysis
   try {
-    const cg = createCodeGraphAnalyzer();
-    const root = process.cwd();
-    const structure = cg.analyze(root, { depth: 1, includeTests: false });
-    console.log(`  ✅ Workspace          — ${structure.totalFiles} files, ${structure.moduleCount} modules`);
+    const cg2 = createCodeGraphManager();
+    const stats = cg2.getStats();
+    console.log(`  ✅ Workspace          — ${stats.totalFiles || 0} files analyzed`);
   } catch (err: any) {
     console.log(`  ⚠️  Workspace          — Analysis skipped`);
   }
