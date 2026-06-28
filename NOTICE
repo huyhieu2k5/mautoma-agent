@@ -1,0 +1,26 @@
+mautoma-agent
+Copyright 2026 huyhieu2k5
+
+This product includes software developed by huyhieu2k5.
+
+Licensed under either of:
+- Apache License, Version 2.0 (see LICENSE-APACHE)
+- MIT License (see LICENSE-MIT)
+
+at your option.
+
+This product includes software from third-party sources:
+
+1. Cursor IDE Skills (from various open-source contributors):
+   - Wsl2Oliveira/cursor-agent-skills (MIT)
+   - spencerpauly/awesome-cursor-skills (MIT)
+   - aussiegingersnap/cursor-skills (MIT)
+   - See .cursor/skills/*/SKILL.md for individual licenses
+
+2. TypeScript, tsx, esbuild — Microsoft, esbuild contributors (Apache-2.0 / MIT)
+
+All third-party licenses are preserved in their respective SKILL.md files
+or in the dependency's node_modules directory.
+
+For the full list of bundled skills and their licenses, see:
+.cursor/skills/*/SKILL.md

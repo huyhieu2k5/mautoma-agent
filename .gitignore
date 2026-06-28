@@ -1,0 +1,7 @@
+node_modules/
+.mautoma-agent/
+.agent-state/
+.skill-cache/
+.cursor/autonomous-memory/
+*.log
+.DS_Store
