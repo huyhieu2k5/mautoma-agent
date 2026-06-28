@@ -19,6 +19,11 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import { autoApply, createAutoApplyEngine } from './index';
 import { createCapabilityRouter, CAPABILITY_AXES } from '../capability-router';
 import { createSkillOrchestrator, getSkillRegistry } from '../skill-manager';
@@ -26,7 +31,16 @@ import { createEvolutionEngine } from '../evolution';
 import { getMemoryManager } from '../memory-store';
 import { getTaskPlanner } from '../task-planner';
 import { createCodeGraphManager } from '../codegraph';
+import { getCLEAREvaluator } from '../evaluation';
+import { getSessionGuard } from '../security/SessionGuard';
+import { getDisputeSessionManager } from '../security/DisputeSession';
+import { createComputerControl, createWorkflows } from '../computer-control';
+import { createAgentEscalationEngine, createTeamOrchestrator } from '../agent-orchestration';
 import { cleanupAIArtifacts } from '../file-cleaner';
+import { createVerificationEngine } from '../verification';
+import { createErrorLearner } from '../error-recovery';
+import { getExecutor } from '../executor';
+import * as path from 'path';
 
 // ==================== BANNER ====================
 
@@ -115,6 +129,93 @@ async function showCapabilitiesStatus(): Promise<void> {
     console.log(`  ✅ Workspace          — ${stats.totalFiles || 0} files analyzed`);
   } catch (err: any) {
     console.log(`  ⚠️  Workspace          — Analysis skipped`);
+  }
+
+  // 9. Computer Control (5 components)
+  try {
+    createComputerControl();
+    createWorkflows();
+    console.log(`  ✅ Computer Control   — 5 components: keyboard/mouse/screen/automation/workflows`);
+  } catch (err: any) {
+    console.log(`  ❌ Computer Control   — Error: ${err.message}`);
+  }
+
+  // 10. Verification (LATS + committee + self-RAG)
+  try {
+    createVerificationEngine();
+    console.log(`  ✅ Verification       — LATS tree search + Committee review + Self-RAG`);
+  } catch (err: any) {
+    console.log(`  ❌ Verification       — Error: ${err.message}`);
+  }
+
+  // 11. Executor (autonomous runner + subagent coordinator)
+  try {
+    getExecutor();
+    console.log(`  ✅ Executor           — Autonomous runner + Subagent coordinator`);
+  } catch (err: any) {
+    console.log(`  ❌ Executor           — Error: ${err.message}`);
+  }
+
+  // 12. Error Recovery (pattern DB + retry)
+  try {
+    createErrorLearner();
+    console.log(`  ✅ Error Recovery     — Pattern DB + Retry strategies`);
+  } catch (err: any) {
+    console.log(`  ❌ Error Recovery     — Error: ${err.message}`);
+  }
+
+  // 13. Agent Orchestration (5 teams + 5-tier escalation)
+  try {
+    createAgentEscalationEngine();
+    createTeamOrchestrator();
+    console.log(`  ✅ Agent Orchestr.    — 5 teams (Supervisor/Arena/Interrogate/Debate/Hierarchical)`);
+  } catch (err: any) {
+    console.log(`  ❌ Agent Orchestr.    — Error: ${err.message}`);
+  }
+
+  // 14. Evaluation (CLEAR framework)
+  try {
+    getCLEAREvaluator();
+    console.log(`  ✅ CLEAR Evaluator    — Cost/Latency/Efficacy/Assurance/Reliability`);
+  } catch (err: any) {
+    console.log(`  ❌ CLEAR Evaluator    — Error: ${err.message}`);
+  }
+
+  // 15. Security: SessionGuard
+  try {
+    getSessionGuard({ maxRequestsPerMinute: 60 });
+    console.log(`  ✅ SessionGuard       — HMAC + Rate limit + Audit log`);
+  } catch (err: any) {
+    console.log(`  ❌ SessionGuard       — Error: ${err.message}`);
+  }
+
+  // 16. Security: DisputeSession
+  try {
+    getDisputeSessionManager();
+    console.log(`  ✅ DisputeSession     — 6 candidates + Elo champion selection`);
+  } catch (err: any) {
+    console.log(`  ❌ DisputeSession     — Error: ${err.message}`);
+  }
+
+  // 17. Cursor Skills (32 skills in .cursor/skills/)
+  try {
+    const skillsDir = path.resolve(__dirname, '..', '.cursor', 'skills');
+    let skillCount = 0;
+    if (fs.existsSync(skillsDir)) {
+      skillCount = fs.readdirSync(skillsDir, { withFileTypes: true })
+        .filter((d) => d.isDirectory()).length;
+    }
+    console.log(`  ✅ Cursor Skills      — ${skillCount} curated skills (arena, architect, tdd, etc.)`);
+  } catch (err: any) {
+    console.log(`  ❌ Cursor Skills      — Error: ${err.message}`);
+  }
+
+  // 18. Skill Orchestrator
+  try {
+    createSkillOrchestrator({});
+    console.log(`  ✅ Skill Orchestr.    — Multi-skill execution plans`);
+  } catch (err: any) {
+    console.log(`  ❌ Skill Orchestr.    — Error: ${err.message}`);
   }
 
   console.log('─'.repeat(60));
