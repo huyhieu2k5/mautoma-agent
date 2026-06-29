@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node ./scripts/session-start-driver.cjs"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "npx tsx file-cleaner/cli.ts --quiet"
+      }
+    ]
+  }
+}

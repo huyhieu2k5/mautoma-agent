@@ -1,41 +1,27 @@
 {
   "name": "mautoma-agent",
   "version": "1.0.1",
-  "description": "Autonomous AI Agent Plugin for Cursor IDE -- auto-applies skills from raw user requests via CapabilityRouter + Dispute Tournament",
+  "description": "Mautoma agent runtime — CapabilityRouter, AutoApply engine, AI file cleaner. Both a Cursor plugin (see .cursor-plugin/plugin.json) and a standalone npm package.",
   "main": "index.ts",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "start": "tsx auto-apply/smart_runner.ts",
     "start:daemon": "tsx auto-apply/smart_runner.ts --daemon",
     "start:status": "tsx auto-apply/smart_runner.ts --status",
     "agent": "tsx agent_cli.ts",
-    "agent:interactive": "tsx agent_cli.ts",
-    "agent:continuous": "tsx agent_cli.ts --continuous",
     "agent:status": "tsx agent_cli.ts --status",
-    "agent:tasks": "tsx agent_cli.ts --tasks",
+    "agent:continuous": "tsx agent_cli.ts --continuous",
+    "router": "tsx scripts/capability-router-cli.ts",
     "cleanup": "tsx file-cleaner/cli.ts",
     "cleanup:dry-run": "tsx file-cleaner/cli.ts --dry-run",
-    "plugin:install": "tsx scripts/plugin-install.ts",
-    "plugin:build": "tsx scripts/plugin-build.ts",
-    "plugin:watch": "tsx scripts/plugin-build.ts --watch",
-    "plugin:publish": "tsx scripts/plugin-publish.ts",
-    "plugin:test": "tsx tests/plugin-install.test.ts && tsx tests/capability-router.test.ts && tsx tests/plugin-bundle.test.ts && tsx tests/plugin-e2e.test.ts",
-    "plugin:all": "npm run plugin:install && npm run plugin:build && npm run plugin:test",
-    "test": "tsx tests/run.ts",
-    "test:computer-control": "tsx tests/computer-control.test.ts",
-    "test:skill-manager": "tsx tests/skill-manager.test.ts",
-    "test:capability-router": "tsx tests/capability-router.test.ts",
-    "test:plugin-install": "tsx tests/plugin-install.test.ts",
-    "test:plugin-bundle": "tsx tests/plugin-bundle.test.ts",
-    "test:plugin-e2e": "tsx tests/plugin-e2e.test.ts",
-    "test:security": "tsx tests/security.test.ts",
-    "verify": "npm run test:capability-router && npm run test:plugin-install && npm run test:plugin-bundle && npm run test:plugin-e2e",
+    "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test": "npm run typecheck"
   },
   "bin": {
-    "mautoma-agent": "./runtime/bin/agent.mjs",
-    "capability-router": "./scripts/capability-router-cli.ts"
+    "capability-router": "./scripts/capability-router-cli.js",
+    "mautoma-agent": "./scripts/agent-cli.js"
   },
   "keywords": [
     "cursor",
@@ -50,7 +36,9 @@
     "self-evolving",
     "typescript"
   ],
-  "author": "huyhieu2k5",
+  "author": {
+    "name": "huyhieu2k5"
+  },
   "license": "MIT OR Apache-2.0",
   "repository": {
     "type": "git",
@@ -60,9 +48,39 @@
     "url": "https://github.com/huyhieu2k5/mautoma-agent/issues"
   },
   "homepage": "https://github.com/huyhieu2k5/mautoma-agent#readme",
+  "files": [
+    "auto-apply/",
+    "file-cleaner/",
+    "capability-router/",
+    "skill-manager/",
+    "evolution/",
+    "task-planner/",
+    "executor/",
+    "verification/",
+    "memory-store/",
+    "error-recovery/",
+    "codegraph/",
+    "evaluation/",
+    "security/",
+    "computer-control/",
+    "agent-orchestration/",
+    "scripts/",
+    "skills/",
+    "rules/",
+    "agents/",
+    "index.ts",
+    "agent_cli.ts",
+    "app-manifest.json",
+    ".cursor-plugin/",
+    ".cursor/",
+    ".eslintrc.json",
+    "tsconfig.json"
+  ],
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "esbuild": "^0.21.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
     "jsonc-parser": "^3.3.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0"
