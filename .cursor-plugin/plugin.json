@@ -1,0 +1,27 @@
+{
+  "name": "mautoma-agent",
+  "displayName": "Mautoma Agent",
+  "description": "Autonomous AI agent plugin for Cursor IDE — auto-detects intent across 10 capability axes and applies matching skills, rules, and agents without explicit user invocation.",
+  "version": "1.0.1",
+  "author": {
+    "name": "huyhieu2k5"
+  },
+  "homepage": "https://github.com/huyhieu2k5/mautoma-agent",
+  "repository": "https://github.com/huyhieu2k5/mautoma-agent",
+  "license": "MIT",
+  "keywords": [
+    "cursor",
+    "agent",
+    "autonomous",
+    "router",
+    "capability",
+    "dispute",
+    "evolution",
+    "memory",
+    "typescript"
+  ],
+  "skills": "./skills",
+  "rules": "./rules",
+  "agents": "./agents",
+  "hooks": "./.cursor/hooks.json"
+}

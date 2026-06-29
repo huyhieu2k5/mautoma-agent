@@ -1,0 +1,66 @@
+---
+description: Keep the mautoma-agent plugin manifests, paths, and component metadata valid against the Cursor plugin schema (2026) so the plugin remains installable on other users' machines.
+alwaysApply: true
+---
+
+# plugin-quality-gates
+
+This plugin ships **two distinct manifests**. Keep both consistent and aligned with their respective schemas.
+
+## 1. `.cursor-plugin/plugin.json` — Cursor plugin manifest
+
+This is what Cursor reads when a user runs `/add-plugin https://github.com/huyhieu2k5/mautoma-agent`.
+
+Rules:
+
+- File MUST live at exactly `.cursor-plugin/plugin.json` (no other path).
+- Required: `name` (lowercase kebab-case, regex `^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$`).
+- Recommended: `displayName`, `description`, `version`, `author.name`, `license`, `keywords`.
+- `author` MUST be an object `{ name, email? }`, NOT a string.
+- Path fields (`rules`, `skills`, `agents`, `commands`, `hooks`, `mcpServers`) must be string-or-array-of-strings (paths/globs), NEVER bare names.
+- `hooks` is either a string (path to hooks.json) or an inline object — not an array of names.
+- Cursor schema is **strict (`additionalProperties: false`)**. Do NOT add custom top-level fields such as `capabilities`, `capabilityDescriptions`, `mandatorySecurity`, `runtime`, `distribution`, `installCommand`, `scripts`, `security`, or `dependencies` to the Cursor manifest. Move those (if any) to `app-manifest.json` instead.
+- All paths in the manifest must be repo-relative, no `..`, no absolute paths.
+
+## 2. `app-manifest.json` — npm/runtime app manifest
+
+App-level metadata used by the `npm` scripts and the runtime CLI. NOT read by Cursor.
+
+- Lives at `app-manifest.json` (was previously `plugin.json` — renamed in v1.0.1 to avoid Cursor confusion).
+- Free-form shape, but `name` must match `package.json`.
+
+## SKILL.md frontmatter
+
+Every `skills/<name>/SKILL.md` MUST have YAML frontmatter:
+
+```yaml
+---
+name: <kebab-name>            # lowercase letters, numbers, hyphens — MUST match parent folder
+description: "<single-line>"  # one-liner telling the agent when to use it
+# optional:
+disable-model-invocation: true
+paths: ["**/*.ts"]            # glob(s) scoping when this skill applies
+---
+```
+
+Keep `description` on a single line for safe YAML parsing.
+
+## .mdc rules
+
+Cursor auto-loads `.mdc` files from the path declared in `plugin.json.rules`. Plain `.md` files are NOT picked up.
+
+- `rules/<name>.mdc` with frontmatter `description` + `alwaysApply` (and optional `globs`) is the supported form.
+- Do NOT reference absolute filesystem paths (e.g. `@c:\Users\...`) inside a rule — those will be broken on every other user's machine. Use repo-relative paths or describe the resource by its manifest entry.
+
+## hooks.json
+
+Cursor reads `.cursor/hooks.json` with **required `version: 1`**. Session-start driver lives at `scripts/session-start-driver.cjs`; reference it as `"command": "node ./scripts/session-start-driver.cjs"` from the hooks file.
+
+The driver MUST resolve the plugin root via `process.cwd()` or `__dirname` (already does), not by hardcoding absolute paths.
+
+## Common mistakes to avoid
+
+- ❌ Hardcoding `c:\Users\...` or `~/my-projects/...` in any rule, hook, or README.
+- ❌ Adding custom top-level fields to `.cursor-plugin/plugin.json` — Cursor will reject it.
+- ❌ Pointing `skills` / `agents` / `rules` at an array of bare names instead of paths.
+- ❌ Putting `plugin.json` at repo root and expecting Cursor to find it (it won't — must be `.cursor-plugin/plugin.json`).

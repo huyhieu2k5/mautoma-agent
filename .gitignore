@@ -68,6 +68,9 @@ tmp/
 audit.log
 audit.*.log
 
+# HardenedAuditLog Merkle chain snapshots
+*.audit.chain
+
 # Skill test artifacts (generated during testing)
 skills/test-skill-*/
 
@@ -78,6 +81,8 @@ skills/test-skill-*/
 # Runtime bundles (built by plugin:build)
 runtime/lib/*.bundle.mjs
 runtime/lib/*.bundle.mjs.map
+runtime/bin/
+runtime/tmp/
 
 # Debug/temp files
 _*.cjs
@@ -92,3 +97,12 @@ dist-github/mautoma-agent/runtime/lib/*.bundle.mjs.map
 # Local hooks/scripts (test artifacts)
 hooks/*.bak
 hooks/*.tmp
+hooks/*.debug.*
+
+# tsbuildinfo (TypeScript incremental cache)
+*.tsbuildinfo
+
+# Plugin caches (regenerated on install)
+.plugin-cache/
+.cache/
+.eslintcache
