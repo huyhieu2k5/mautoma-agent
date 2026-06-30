@@ -30,3 +30,17 @@ export type {
   AutoApplyConfig,
   AutoApplyContext,
 } from './auto_apply_engine';
+
+export type {
+  ExecutionPlan,
+  ExecutionStep,
+  ExecutionResult,
+  AutoExecutionEngine,
+  AutoExecutionConfig,
+  PlanEnhancement,
+} from '../auto-execution';
+
+export {
+  createAutoExecutionEngine,
+  autoExecute,
+} from '../auto-execution';

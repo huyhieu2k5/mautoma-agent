@@ -205,11 +205,11 @@ Một số module trong repo này là **stub nhẹ có chủ đích** cho local 
 
 | Module | Status | Cái đã implement | Cái đang stub |
 |---|---|---|---|
-| `security/SessionGuard` | 🟡 Stub | Public API surface (`getSessionGuard()`) | HMAC verification, rate limiting, audit calls |
-| `security/DisputeSession` | 🟡 Stub | Public API surface (`getDisputeSessionManager()`) | Tournament orchestration, Merkle chain recording |
-| `evolution/index` | 🟡 Stub | Public API surface (`createEvolutionEngine()`) | Elo rating, slot manager, `HardenedAuditLog`, `hardened_elo_system.ts` |
+| `security/SessionGuard` | ✅ Đã triển khai | Public API surface (`getSessionGuard()`) | HMAC-SHA256 verification, rate limiting (token bucket), tier-based limits, auth levels |
+| `security/DisputeSession` | ✅ Đã triển khai | Public API surface (`getDisputeSessionManager()`) | Tournament orchestration (6 agents, round-robin, Elo-rated), Merkle chain recording |
+| `evolution/index` | ✅ Đã triển khai | Public API surface (`createEvolutionEngine()`) | Elo rating, slot manager (1 Main + 5 Backup), `HardenedAuditLog` |
 | `capability-router/index` | 🟡 Stub | 10-axis contract, type definitions | Multi-axis scoring, dispute tournament, real intent detection |
-| `memory-store`, `executor`, `task-planner`, `error-recovery`, `codegraph`, `verification`, `computer-control`, `agent-orchestration`, `evaluation` | 🟡 Stubs | Public factory functions | Internal orchestration logic |
+| `memory-store`, `executor`, `task-planner`, `verification`, `error-recovery`, `codegraph`, `computer-control`, `agent-orchestration`, `evaluation` | ✅ Đã triển khai | Public factory functions | Real implementations (xem `.canvas/stub-survey.tsx` và unit tests) |
 
 **Ảnh hưởng tới user:**
 

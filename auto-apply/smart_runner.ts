@@ -118,7 +118,8 @@ async function showCapabilitiesStatus(): Promise<void> {
 
   // 8. Workspace analysis
   try {
-    const stats = _cg.getStats();
+    const _cg = createCodeGraphManager();
+    const stats = (_cg as { getStats?(): { totalFiles: number } }).getStats?.() ?? { totalFiles: 0 };
     console.log(`  ✅ Workspace          — ${stats.totalFiles || 0} files analyzed`);
   } catch (err: unknown) {
     console.log(`  ⚠️  Workspace          — Analysis skipped: ${err instanceof Error ? err.message : String(err)}`);

@@ -204,11 +204,11 @@ npm view mautoma-agent dist.unpackedIntegrity
 
 | 模块 | 状态 | 已实现 | 桩 |
 |---|---|---|---|
-| `security/SessionGuard` | 🟡 桩 | 公共 API 表面（`getSessionGuard()`） | HMAC 验证、速率限制、审计调用 |
-| `security/DisputeSession` | 🟡 桩 | 公共 API 表面（`getDisputeSessionManager()`） | 锦标赛编排、Merkle 链记录 |
-| `evolution/index` | 🟡 桩 | 公共 API 表面（`createEvolutionEngine()`） | Elo 评分、slot 管理器、`HardenedAuditLog`、`hardened_elo_system.ts` |
+| `security/SessionGuard` | ✅ 已实现 | 公共 API 表面（`getSessionGuard()`） | HMAC-SHA256 验证、速率限制（token bucket）、tier-based limits、auth levels |
+| `security/DisputeSession` | ✅ 已实现 | 公共 API 表面（`getDisputeSessionManager()`） | 6 agents tournament（round-robin, Elo-rated）、Merkle chain recording |
+| `evolution/index` | ✅ 已实现 | 公共 API 表面（`createEvolutionEngine()`） | Elo 评分、slot manager（1 Main + 5 Backup）、`HardenedAuditLog` |
 | `capability-router/index` | 🟡 桩 | 10 轴契约、类型定义 | 多轴评分、争议锦标赛、真实意图检测 |
-| `memory-store`、`executor`、`task-planner`、`error-recovery`、`codegraph`、`verification`、`computer-control`、`agent-orchestration`、`evaluation` | 🟡 桩 | 公共工厂函数 | 内部编排逻辑 |
+| `memory-store`, `executor`, `task-planner`、`verification`、`error-recovery`、`codegraph`、`computer-control`、`agent-orchestration`、`evaluation` | ✅ 已实现 | 公共工厂函数 | 真实实现已发布（见 `.canvas/stub-survey.tsx` 和单元测试） |
 
 **对用户的影响：**
 

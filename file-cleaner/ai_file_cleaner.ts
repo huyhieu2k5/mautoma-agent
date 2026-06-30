@@ -116,7 +116,7 @@ export class AIFileCleaner {
     let scanned = 0;
     let deleted = 0;
     let merged = 0;
-    const kept = 0;
+    let kept = 0;
 
     this.log(`[cleaner] Scanning ${this.rootDir} (dryRun=${this.dryRun})`);
 

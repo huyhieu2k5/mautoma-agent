@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-01
+
+### Added
+
+Replaced all remaining stubs with real implementations. All 12 modules now have
+working code with unit tests.
+
+- **`task-planner`** — DAG task decomposition, topological sort, cycle detection,
+  critical path, parallel execution plans. 30 unit tests.
+- **`verification`** — Pure-logic verification engine (no subprocesses by default).
+  LATS tree search, committee review (5 perspectives, hard limits), self-RAG,
+  self-verifying loop. 29 unit tests.
+- **`executor`** — AutonomousRunner with retry strategies (none/immediate/
+  linear/exponential/exponential-jitter), RateLimiter, SubAgentCoordinator with
+  capability-based task distribution. 24 unit tests.
+- **`error-recovery`** — PatternDB with JSONL persistence, ErrorLearner that
+  records/finds/applies recovery patterns, retry strategies with hard cap of 5
+  attempts. 38 unit tests.
+- **`codegraph`** — Lightweight TS/JS code analyzer (regex-based, no AST deps).
+  Import graph + Tarjan SCC cycle detection. Orphan + dependency analysis.
+  37 unit tests.
+- **`computer-control`** — DefaultComputerControl (dryRun by default for safety),
+  ActionRateLimiter (60/min), WorkflowBuilder + WorkflowRegistry, audit log.
+  29 unit tests.
+- **`agent-orchestration`** — 5-tier hierarchy (WORKER→SPECIALIST→MANAGER→
+  EXECUTIVE→SUPREME), tierAbove/tierBelow/canEscalate with 2-step max rule,
+  EscalationEngine, TeamOrchestrator with 4 patterns (arena/interrogate/
+  supervisor/hierarchical). 45 unit tests.
+- **`evaluation`** — CLEAR metrics framework (Capability, Learning, Efficiency,
+  Accuracy, Robustness), CleareEvaluator with custom weights, reportToMarkdown.
+  32 unit tests.
+
+- **`security/SessionGuard`** — HMAC-SHA256 verification, token-bucket rate limiting,
+  per-tier limits (WORKER 100, SPECIALIST 100, MANAGER 150, EXECUTIVE 200 req/min),
+  auth levels (ANONYMOUS → USER → SYSTEM), action-based required level mapping.
+  19 unit tests.
+- **`security/DisputeSession`** — Tournament orchestration with 6 agents
+  (2 Worker + 2 Specialist + 1 Manager + 1 Executive), round-robin Elo-rated matches,
+  champion selection by highest Elo, Merkle chain recording with SHA-256 tamper detection.
+  17 unit tests.
+- **`evolution`** — SlotEvolutionManager with 6 slots (1 Main + 5 Backup), Elo rating
+  with K-factor adjustment, HardenedAuditLog (Merkle chain), match/slot promotion/demotion,
+  runMatch/runEvolutionCycle/evictWorst. 27 unit tests.
+
+### Performance contracts
+
+- **No subprocesses by default** — all modules use pure JS to prevent RAM spikes.
+  Heavy checks (tsc, vitest) are opt-in only.
+- **Hard resource limits** — depth ≤ 2, file cap = 200, file size ≤ 200KB,
+  audit log capped at 1000 entries, retry max = 5 attempts.
+
 ## [1.0.0] - 2026-06-29
 
 ### Added

@@ -18,6 +18,7 @@ export default defineConfig({
         'file-cleaner/**/*.ts',
         'capability-router/**/*.ts',
         'security/**/*.ts',
+        'memory-store/**/*.ts',
         'scripts/validate-*.mts',
       ],
       exclude: [

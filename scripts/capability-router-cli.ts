@@ -187,7 +187,7 @@ async function main(): Promise<void> {
         .join(', ');
       const ds = decision.disputeSession;
       const championLine = decision.championId
-        ? `${decision.championId} (dispute ${ds?.status ?? 'resolved'})`
+        ? `${decision.championId} (Elo ${ds?.championElo ?? '?'})`
         : 'skipped (runDisputeOnRoute=false)';
 
       console.log('═══════════════════════════════════════════════════════════════');
@@ -200,6 +200,13 @@ async function main(): Promise<void> {
       console.log(`🏆 Champion agent: ${championLine}`);
       if (ds?.sessionId) {
         console.log(`🆔 Dispute session: ${ds.sessionId}`);
+        console.log(`👥 Participants:    ${ds.participants}`);
+        if (ds.runnerUp) {
+          console.log(`🥈 Runner-up:      ${ds.runnerUp} (Elo ${ds.runnerUpElo})`);
+        }
+        if (ds.merkleRoot) {
+          console.log(`🔗 Merkle root:    ${ds.merkleRoot.slice(0, 16)}...${ds.merkleRoot.slice(-8)}`);
+        }
       }
       if (axesList) {
         console.log(`⚡ Other axes:     ${axesList}`);

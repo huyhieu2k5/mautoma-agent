@@ -29,6 +29,7 @@ import { getSessionGuard } from '../security/SessionGuard';
 import { getDisputeSessionManager } from '../security/DisputeSession';
 import { createComputerControl, createWorkflows } from '../computer-control';
 import { createAgentEscalationEngine, createTeamOrchestrator } from '../agent-orchestration';
+import { createAutoExecutionEngine } from '../auto-execution';
 
 export type CapabilityAxis =
   | 'computer_control'
@@ -495,6 +496,10 @@ export interface AutoApplyConfig {
   cleanup?: boolean;
   /** Verbose output */
   verbose?: boolean;
+  /** Bật auto-execution: tự động thực thi plan không cần confirm (default: true) */
+  autoExecution?: boolean;
+  /** Cho phép self-upgrade plan khi phát hiện cách tốt hơn (default: true) */
+  selfUpgradePlan?: boolean;
 }
 
 export class AutoApplyEngine {
@@ -507,6 +512,8 @@ export class AutoApplyEngine {
       language: config.language ?? 'vi',
       cleanup: config.cleanup ?? true,
       verbose: config.verbose ?? true,
+      autoExecution: config.autoExecution ?? true,
+      selfUpgradePlan: config.selfUpgradePlan ?? true,
     };
   }
 
@@ -522,6 +529,39 @@ export class AutoApplyEngine {
     this.config.verbose && console.log('[auto-apply] 🚀 Starting AutoApply Engine');
     this.config.verbose && console.log(`[auto-apply] Request: "${request}"`);
     this.config.verbose && console.log('='.repeat(60));
+
+    // Step 0: Check if this is a plan request → trigger auto-execution
+    if (this.config.autoExecution) {
+      const execEngine = createAutoExecutionEngine({
+        autoExecute: true,
+        allowSelfUpgrade: this.config.selfUpgradePlan,
+        verbose: this.config.verbose,
+        language: this.config.language,
+      });
+      const { eligible } = execEngine.isAutoExecutionCandidate(request);
+      if (eligible) {
+        this.config.verbose && console.log('[auto-apply] 📋 Plan detected → Auto-Execution Mode');
+        try {
+          const execResult = await execEngine.execute(request);
+          const durationMs = Date.now() - start;
+          return {
+            success: execResult.success,
+            axesTriggered: ['task_plan', 'execute'],
+            steps: execResult.plan.steps.map(s => ({
+              axis: 'task_plan' as CapabilityAxis,
+              action: s.title,
+              success: s.status === 'completed',
+              output: s.result,
+              error: s.error,
+            })),
+            durationMs,
+            summary: execResult.summary,
+          };
+        } catch (err) {
+          this.config.verbose && console.warn('[auto-apply] Auto-execution failed, falling back to normal mode');
+        }
+      }
+    }
 
     // Step 1: Detect intents
     const intents = detectIntents(request, this.config.language);

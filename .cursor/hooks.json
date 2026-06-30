@@ -6,7 +6,15 @@
         "command": "node ./scripts/session-start-driver.cjs"
       }
     ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "node ./scripts/before-submit-prompt-hook.cjs"
+      }
+    ],
     "sessionEnd": [
+      {
+        "command": "node ./scripts/session-end-memory-hook.cjs"
+      },
       {
         "command": "npx tsx file-cleaner/cli.ts --quiet"
       }
