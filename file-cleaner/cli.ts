@@ -13,11 +13,11 @@ async function main() {
   const quiet = args.includes('--quiet');
   const verbose = !quiet;
   const scanArg = args.find((a) => a.startsWith('--scan='));
-  const scanDirs = scanArg ? scanArg.split('=')[1].split(',') : [];
+  const scanDirs = scanArg ? scanArg.split('=')[1]?.split(',').filter(Boolean) ?? [] : [];
   const removeArg = args.find((a) => a.startsWith('--remove-note='));
 
   if (removeArg) {
-    const keyword = removeArg.split('=')[1];
+    const keyword = removeArg.split('=')[1] ?? '';
     const ok = removeNote(keyword);
     console.log(ok ? `[ok] Removed section matching "${keyword}"` : `[skip] No section matched "${keyword}"`);
     return;

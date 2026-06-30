@@ -6,6 +6,6 @@ export interface SessionGuardOptions {
   maxRequestsPerMinute?: number;
 }
 
-export function getSessionGuard(_opts: SessionGuardOptions = {}): { armed: true } {
+export function getSessionGuard(_opts?: SessionGuardOptions): { armed: true } {
   return { armed: true };
 }

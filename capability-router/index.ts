@@ -41,7 +41,7 @@ export interface CapabilityRouter {
   route(input: RouterInput): Promise<RouterDecision>;
 }
 
-export function createCapabilityRouter(_config: RouterConfig = {}): CapabilityRouter {
+export function createCapabilityRouter(_config?: RouterConfig): CapabilityRouter {
   return {
     async route(input: RouterInput): Promise<RouterDecision> {
       const axis = input.raw.length > 0 ? 'execute' : 'idle';

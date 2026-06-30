@@ -7,8 +7,7 @@
   },
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier"
+    "plugin:@typescript-eslint/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -21,14 +20,11 @@
     "no-undef": "off",
     "no-prototype-builtins": "off",
     "no-empty": ["error", { "allowEmptyCatch": true }],
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
-      }
-    ],
+    "@typescript-eslint/no-unused-vars": ["warn", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_",
+      "caughtErrorsIgnorePattern": "^_"
+    }],
     "@typescript-eslint/no-explicit-any": "warn",
     "no-restricted-syntax": [
       "error",
@@ -65,9 +61,10 @@
       }
     },
     {
-      "files": ["tests/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
+      "files": ["tests/**/*.ts", "**/*.test.ts"],
       "env": {
-        "node": true
+        "node": true,
+        "jest": false
       },
       "rules": {
         "no-console": "off",
