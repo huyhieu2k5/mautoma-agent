@@ -2,7 +2,7 @@
   "name": "mautoma-agent",
   "displayName": "Mautoma Agent",
   "description": "Autonomous AI agent plugin for Cursor IDE — auto-detects intent across 10 capability axes and applies matching skills, rules, and agents without explicit user invocation.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "huyhieu2k5"
   },

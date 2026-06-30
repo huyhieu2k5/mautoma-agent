@@ -1,251 +1,79 @@
-# 🤖 mautoma-agent — Autonomous AI Agent Plugin for Cursor IDE
+# 🤖 mautoma-agent — Autonomous AI Plugin for Cursor IDE
 
-> Plugin that **automatically applies** every capability to every user request —
-> users don't need to know how the system works.
+> Auto-applies the right skill to every user request. Users don't need to know how the system works.
 
-**Languages:** [English](README.md) | [Tiếng Việt](README.vi.md) | [中文](README.zh.md)
-
----
-
-[![CI](https://github.com/huyhieu2k5/mautoma-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/huyhieu2k5/mautoma-agent/actions/workflows/ci.yml)
-[![Release](https://github.com/huyhieu2k5/mautoma-agent/actions/workflows/release.yml/badge.svg)](https://github.com/huyhieu2k5/mautoma-agent/releases)
-[![CodeQL](https://github.com/huyhieu2k5/mautoma-agent/actions/workflows/codeql.yml/badge.svg)](https://github.com/huyhieu2k5/mautoma-agent/security/code-scanning)
-[![npm version](https://img.shields.io/npm/v/mautoma-agent.svg)](https://www.npmjs.com/package/mautoma-agent)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
-[![Node ≥20](https://img.shields.io/badge/node-%E2%89%A520-339933.svg)](.nvmrc)
+**Version:** 1.0.2 (slim distribution)
+**License:** MIT
 
 ---
 
-## Installation
+## What is this?
 
-```bash
-# In Cursor IDE, type:
+`mautoma-agent` is a Cursor plugin that wraps a `alwaysApply: true` rule plus a router skill. When you type any request, the router picks one of 10 capability axes and invokes the matching skill automatically:
+
+| Axis | What it does |
+|---|---|
+| `execute` | Write / build / ship code |
+| `verify` | Test, lint, validate |
+| `analyze_code` | Read and review code |
+| `task_plan` | Break down a request into steps |
+| `remember` | Save and retrieve context across sessions |
+| `recover` | Fix errors, retry, fall back |
+| `evolve` | Improve strategies over time |
+| `computer_control` | Drive the GUI / OS |
+| `orchestrate` | Multi-agent coordination |
+| `skill_install` | Install / update plugins and packages |
+
+A dispute tournament (round-robin Elo over 6 candidate agents) picks the **champion** that actually executes. Every decision is appended to a tamper-evident Merkle audit log.
+
+## Install
+
+In Cursor IDE:
+
+```
 /add-plugin https://github.com/huyhieu2k5/mautoma-agent
 ```
 
-Or install locally:
+Or install from a local clone:
 
 ```bash
-git clone https://github.com/huyhieu2k5/mautoma-agent.git
-cd mautoma-agent
-npm install
-npm start
+git clone https://github.com/huyhieu2k5/mautoma-agent
 ```
 
----
+## What's in the box
 
-## 🚀 Basic Usage
-
-**No prior knowledge needed!** Just state your request:
-
-```bash
-npm start
-```
+This is the **slim distribution**. It contains only what Cursor needs to install and run the plugin:
 
 ```
-🤖 Enter your request:
-→ "Create an e-commerce website"
-→ "Analyze the code and find bugs"
-→ "Install a new plugin"
-→ "Plan this project"
-→ "Refactor the entire project"
+.cursor-plugin/plugin.json     ← manifest Cursor reads on /add-plugin
+.cursor/hooks.json             ← session-start hook (dispute tournament)
+rules/                         ← 4 alwaysApply rules
+agents/                        ← 7 subagent definitions
+skills/                        ← 47 skill definitions (SKILL.md each)
+LICENSE                        ← MIT
+README.md                      ← this file
+.gitignore
 ```
 
-The system automatically:
-1. Detects the intent from the request (10 axes)
-2. Selects the right capabilities
-3. Runs them in priority order
-4. Cleans up leftover files before finishing
+Source code, tests, CI workflows, and the CLI are intentionally **not shipped** with the plugin — they live in a separate development repository. The plugin's rules and skills are self-contained: the router is implemented as instructions the Cursor agent itself follows, not as a TypeScript binary.
 
----
+## How the auto-router works
 
-## 📋 10 Capability Axes
+1. **You type a request** in chat (any language, no prefix needed).
+2. The `autonomous-router` skill is invoked (mandated by `rules/auto-router.mdc`).
+3. The skill describes how to score the request across the 10 axes.
+4. The top-scoring axes enter a **dispute tournament** — round-robin Elo over 6 candidate agents.
+5. The champion executes the matching skill.
+6. The decision is logged to the Merkle audit chain.
 
-| Axis | Description | Triggers |
-|------|-------------|----------|
-| `computer_control` | Mouse, keyboard, vision control | click, press, screenshot |
-| `skill_install` | Install skill / plugin / package | install, plugin, npm install |
-| `task_plan` | Analyze and plan | plan, roadmap, steps |
-| `analyze_code` | Analyze, review, find bugs | analyze, refactor, optimize |
-| `execute` | Generate code, build | create, build, write code |
-| `verify` | Test, validate | test, check, ensure |
-| `remember` | Memorize and retrieve context | remember, recall, context |
-| `evolve` | Evolve agent strategy | evolve, improve agent |
-| `recover` | Handle and recover from errors | fix bug, retry, fallback |
-| `orchestrate` | Multi-agent coordination | team, delegate, multi-agent |
-
----
-
-## 🛠️ CLI Commands
-
-```bash
-# Smart Runner (recommended)
-npm start                     # Interactive
-npm start -- "your request"   # Single request
-npm run start:daemon          # Stay alive
-npm run start:status          # Show status
-
-# Agent CLI
-npm run agent                 # Interactive agent loop
-npx tsx agent_cli.ts --continuous   # Continuous mode
-npx tsx agent_cli.ts --router "your request"  # Router decision only
-
-# AI File Cleaner
-npm run cleanup               # Real cleanup
-npm run cleanup:dry-run       # Preview what will be deleted
-
-# Plugin
-npm run plugin:build          # Build bundle
-npm run plugin:publish        # Build GitHub distribution
-```
-
----
-
-## 🧹 AI File Cleaner (automatic)
-
-Before the end of **every request**, the system automatically cleans up leftover files generated by AI.
-
-### Auto-deleted patterns:
-- `scratch*`, `draft*`, `temp*`, `tmp*`, `notes*`
-- `summary*`, `recap*`, `overview*`, `cheatsheet*`
-- `response*`, `output*`, `result*`, `answer*`
-- `test-<name>.ts` (root only)
-- `todo*`, `plan*`, `design*`
-
-### Protected (never deleted):
-- `package.json`, `tsconfig.json`, `README.md`, `LICENSE`, `AGENTS.md`
-- `.env`, `.gitignore`, `AI_NOTES.md`, dotfiles
-
-### Preserves content before deletion:
-Files ≥ 50 chars are auto-merged into `AI_NOTES.md` before deletion.
-
-### Remove a section when no longer needed:
-```bash
-npm run cleanup -- --remove-note="keyword-in-section"
-```
-
----
-
-## 🔒 Security
-
-- **Hardened modules**: Authority, AuditLog, Evolution, Slots, Elo
-- **HMAC-SHA256** for authentication tokens
-- **Input validation** on every public API
-- **Async locks** for race conditions
-- **Sealed singletons**
-
----
-
-## 📁 Project Structure
+You should see roughly:
 
 ```
-mautoma-agent/
-├── index.ts                  # Main exports
-├── agent_cli.ts              # CLI entry point
-├── auto-apply/               # Smart Runner + AutoApply Engine
-│   ├── auto_apply_engine.ts  # Engine that detects & applies capabilities
-│   ├── smart_runner.ts       # Smart Runner (auto-runs)
-│   └── index.ts
-├── capability-router/         # Router that picks the capability
-├── skill-manager/             # Skill management
-├── computer-control/          # Mouse, keyboard control
-├── evolution/                 # Self-evolving agents (Elo, slots)
-├── file-cleaner/             # Auto-cleanup of leftover files
-├── codegraph/                 # Code structure analysis
-├── memory-store/              # Context memory
-├── task-planner/              # Project planning
-├── executor/                  # Code execution
-├── verification/              # Result verification
-├── error-recovery/            # Error handling
-├── agent-orchestration/       # Multi-agent
-├── hooks/                     # Session hooks
-└── skills/                    # Curated skills (46)
+[router] primary=execute, score=0.82, champion=worker-1
+[router] dispute resolved in 4 rounds, merkle root=abc123…
+[executor] running build-feature skill…
 ```
 
----
+## License
 
-## 📄 License
-
-**COMBINED PERMISSIVE LICENSE** — Copyright (c) 2026 huyhieu2k5
-
-Dual-licensed: MIT OR Apache-2.0
-
----
-
-## 🔐 NPM Trusted Publishing (OIDC)
-
-This repo is set up for [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers) — no long-lived `NPM_TOKEN` secret is required. The `.github/workflows/release.yml` workflow uses OIDC via the `id-token: write` permission.
-
-**One-time setup on npmjs.com:**
-
-1. Go to **https://www.npmjs.com/settings/YOUR_USERNAME/automation** (or the org equivalent for `mautoma-agent`).
-2. Click **"Add trusted publisher"**.
-3. Fill in:
-   - **Publisher:** GitHub Actions
-   - **Repository:** `huyhieu2k5/mautoma-agent`
-   - **Workflow filename:** `release.yml`
-   - **Environment name:** _(leave blank)_
-4. Save. That's it — no token to copy.
-
-**Verification after the first release:**
-
-```bash
-npm view mautoma-agent dist.unpackedIntegrity
-```
-
-The package will carry a `--provenance` attestation (also visible on the npm package page under "Provenance").
-
-**Fallback (if you can't use Trusted Publishing):** add an `NPM_TOKEN` secret in GitHub repo settings → Secrets → Actions. The workflow has a `NODE_AUTH_TOKEN` env var that will pick it up automatically.
-
----
-
-## ⚠️ Status of Stub Modules
-
-Several modules in this repo are **intentional lightweight stubs** for local type-checking — the full implementations live in the bundled Cursor plugin runtime (`runtime/lib/`) and are not part of this open-source package. The interfaces are stable, but the body of these modules currently returns static placeholders:
-
-| Module | Status | What's implemented | What's stubbed |
-|---|---|---|---|
-| `security/SessionGuard` | ✅ Implemented | Public API surface (`getSessionGuard()`) | HMAC-SHA256 verification, rate limiting (token bucket), tier-based limits, auth levels |
-| `security/DisputeSession` | ✅ Implemented | Public API surface (`getDisputeSessionManager()`) | Tournament orchestration (6 agents, round-robin, Elo-rated), Merkle chain recording |
-| `evolution/index` | ✅ Implemented | Public API surface (`createEvolutionEngine()`) | Elo rating, slot manager (1 Main + 5 Backup), `HardenedAuditLog`, `hardened_elo_system.ts` |
-| `capability-router/index` | 🟡 Stub | 10-axis contract, type definitions | Multi-axis scoring, dispute tournament, real intent detection |
-| `memory-store`, `executor`, `task-planner`, `verification`, `error-recovery`, `codegraph`, `computer-control`, `agent-orchestration`, `evaluation` | ✅ Implemented | Public factory functions | Real implementations shipped (see `.canvas/stub-survey.tsx` and unit tests) |
-
-**Implications for users:**
-
-- The Cursor plugin runtime **in your Cursor IDE** uses the full implementations (bundled separately). The stubs only matter if you import this repo's TypeScript modules directly into your own Node code.
-- The CLI (`scripts/capability-router-cli.ts`) works against the stub router today — it returns the canonical output shape so downstream tooling can be built and tested.
-- If you're consuming this repo as an npm package (`mautoma-agent`), the `bin` scripts will run but the substantive behaviors (Dispute tournament, Merkle audit log, Elo ranking) are placeholders until the full runtime ships here.
-
-**We track the migration in [`CHANGELOG.md`](CHANGELOG.md).** Each release will move at least one module from stub → full.
-
----
-
-## 🔗 Links
-
-- **GitHub**: https://github.com/huyhieu2k5/mautoma-agent
-- **Plugin**: `/add-plugin https://github.com/huyhieu2k5/mautoma-agent`
-
----
-
-## 🤝 CI/CD
-
-This project runs an automated pipeline on every push and pull request:
-
-| Workflow | What it does |
-|---|---|
-| [`ci.yml`](.github/workflows/ci.yml) | Lint + format check + typecheck + tests (coverage) + build + manifest validation |
-| [`release.yml`](.github/workflows/release.yml) | On `v*.*.*` tag → build, npm publish with provenance, GitHub Release |
-| [`release-please.yml`](.github/workflows/release-please.yml) | Auto-opens release PR with version bump + CHANGELOG |
-| [`codeql.yml`](.github/workflows/codeql.yml) | Weekly CodeQL security scan for JavaScript/TypeScript |
-| [`security-audit.yml`](.github/workflows/security-audit.yml) | `npm audit --audit-level=high` + SBOM generation |
-| [`labeler.yml`](.github/workflows/labeler.yml) | Auto-labels PRs by area (module:capability-router, ci, docs, …) |
-| [`validate-manifests.yml`](.github/workflows/validate-manifests.yml) | Validates `.cursor-plugin/plugin.json` + `app-manifest.json` + all 46 skills on every change |
-
-Dependabot opens weekly PRs to update npm dependencies and GitHub Actions.
-
-To run the same checks locally:
-
-```bash
-npm run lint && npm run format:check && npm run typecheck && npm test && npm run build && npm run validate:manifest && npm run validate:skills
-```
+MIT — see [LICENSE](LICENSE).

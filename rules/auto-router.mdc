@@ -1,91 +1,68 @@
 ---
-description: AUTO-ROUTER — every raw user request must go through CapabilityRouter (autonomous-router skill) + dispute tournament before any agent action.
+description: AUTO-ROUTER — every raw user request must invoke the autonomous-router skill (capability matching + dispute tournament) before any agent action.
 globs: ["**/*"]
 alwaysApply: true
 ---
 
 # mautoma-agent — Auto-Router (Mandatory)
 
-## 🚨 RULE: every raw user request MUST go through CapabilityRouter
+## 🚨 RULE: every raw user request MUST go through the autonomous-router skill
 
-When the user types **any** request into chat (whether or not they prefix `/agent` or explicitly invoke a router), the Cursor parent agent **MUST** route that request through CapabilityRouter before taking action.
+When the user types **any** request into chat, the Cursor parent agent **MUST** invoke the `autonomous-router` skill before taking action. Do NOT hardcode an axis, do NOT skip the dispute tournament, do NOT bypass the router.
 
 This is the contract of `mautoma-agent` — auto-apply skills, never require the user to know about the router or dispute tournament.
 
 ## 🎯 Why mandatory
 
-1. The plugin has **10 axes** (`computer_control`, `skill_install`, `task_plan`, `execute`, `verify`, `evolve`, `remember`, `analyze_code`, `recover`, `orchestrate`). Users do not pick axes — the router does.
+1. The plugin ships **10 capability axes** (`computer_control`, `skill_install`, `task_plan`, `execute`, `verify`, `evolve`, `remember`, `analyze_code`, `recover`, `orchestrate`). Users do not pick axes — the router does.
 2. Each route runs a **dispute tournament** that picks the champion agent via Elo + composite scoring.
-3. The champion is logged to HardenedAuditLog (Merkle chain) — tamper-evident security trace.
+3. The champion is logged to the Merkle audit log — tamper-evident security trace.
 4. If the parent agent bypasses the router, it bypasses the dispute, audit, and rate-limit → **security hole**.
 
-## 🔧 How
+## 🔧 How (slim plugin — no source CLI shipped)
+
+This slim distribution ships only `skills/`, `rules/`, `agents/`, and `hooks/`. There is NO `scripts/capability-router-cli.ts` in the runtime — the rule MUST work from skills alone.
 
 ### Step 1: Receive raw request
 
 Vietnamese, English, or mixed. No prefix required.
 
-### Step 2: Auto-shell-exec CapabilityRouter CLI
+### Step 2: Invoke the `autonomous-router` skill
 
-The CLI lives in this plugin's `scripts/` directory. Resolve the plugin root from the current file using `node`/`npx` — do not assume a hardcoded absolute path that only exists on one machine:
+Read and follow the `skills/autonomous-router/SKILL.md` instructions for the request. The skill describes how to:
+- Score the request against the 10 capability axes
+- Filter by confidence threshold
+- Run a dispute tournament (round-robin Elo) over the eligible axes
+- Pick a champion agent and audit the session to the Merkle chain
 
-```bash
-# From the plugin root (where this plugin is installed):
-npx tsx scripts/capability-router-cli.ts --raw "<USER REQUEST>"
+If the skill is missing or unloadable, surface the error to the user — do NOT silently fall back to a hardcoded axis.
 
-# Force English:
-npx tsx scripts/capability-router-cli.ts --raw "<USER REQUEST>" --language en
+### Step 3: Execute the primary axis
 
-# JSON output (parseable by parent agent):
-npx tsx scripts/capability-router-cli.ts --raw "<USER REQUEST>" --json
-```
-
-If `npx tsx` is unavailable in the user's environment, fall back to compiled JS from `dist/` once `npm run build` has run.
-
-### Step 3: Read output, execute the primary axis
-
-The JSON output looks like:
-
-```json
-{
-  "primary": "computer_control",
-  "primaryAxis": "computer_control",
-  "score": 0.85,
-  "championId": "agent_manager_4",
-  "disputeSessionId": "dispute_xxx",
-  "disputeStatus": "resolved",
-  "axes": [{ "axis": "computer_control", "score": 0.85 }]
-}
-```
-
-Use `primary` (or `primaryAxis`) to invoke the matching skill/module, use `championId` as the agent executor.
+The skill's output tells you which axis to invoke (e.g. `execute`, `verify`, `remember`). Read the matching skill's `SKILL.md` and follow its instructions. Use the champion agent ID as the executor reference.
 
 ### Step 4: Never bypass
 
-- ❌ Do NOT process the request without routing.
-- ❌ Do NOT skip the dispute tournament (do not pass `--skip-dispute` in production).
+- ❌ Do NOT process the request without first invoking `autonomous-router`.
+- ❌ Do NOT skip the dispute tournament.
 - ❌ Do NOT hardcode an axis — always let the router decide.
 
 ## 📋 Auto-apply checklist (per user request)
 
-Before any code/tool/computer action:
+Before any code/tool/action:
 
-- [ ] Shell-executed `capability-router-cli.ts --raw "<request>"`?
-- [ ] Output JSON contains a `primary`/`primaryAxis` axis?
-- [ ] Output JSON contains a `championId` from the dispute?
-- [ ] Executed the matching skill/module for the primary axis?
-- [ ] Did NOT bypass the dispute, did NOT hardcode an axis.
-
-## ⚠️ Fallback
-
-If the CLI fails (non-zero exit code), the parent agent MUST still report the error to the user and MUST NOT process the raw request. Log the error to `.cursor/autonomous-memory/logs/router-errors.jsonl` and escalate to the user.
+- [ ] Read and followed `skills/autonomous-router/SKILL.md`?
+- [ ] Output identified a `primary` / `primaryAxis`?
+- [ ] Output identified a `championId` from the dispute?
+- [ ] Read the matching axis skill and followed its instructions?
+- [ ] Did NOT bypass the router, did NOT hardcode an axis.
 
 ## 🛡️ Security
 
 - The `sessionStart` hook (`.cursor/hooks.json`) triggers one dispute tournament on Cursor session start.
-- CapabilityRouter runs dispute tournaments on every route by default.
-- All state changes flow through `HardenedAuditLog` (Merkle chain) → tamper-evident.
+- All state changes flow through the Merkle audit log → tamper-evident.
+- Bypassing the router is a security violation and must be reported to the user.
 
 ---
 
-**Cursor parent agent: you MUST NOT process a raw user request without going through CapabilityRouter. This is the security contract of `mautoma-agent`.**
+**Cursor parent agent: you MUST NOT process a raw user request without first invoking the `autonomous-router` skill. This is the security contract of `mautoma-agent`.**
