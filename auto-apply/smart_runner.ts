@@ -1,11 +1,11 @@
 /**
- * SmartRunner — Auto-running entry point
+ * SmartRunner - Entry point chạy tự động mọi thứ
  *
- * When a user opens Cursor with this project, SmartRunner:
- *  1. Auto-scans the workspace
- *  2. Initializes all capabilities (router, skills, memory, evolution)
- *  3. Waits for user input
- *  4. For each input → AutoApply → capability → verify → cleanup
+ * Khi người dùng mở Cursor với project này, SmartRunner:
+ *  1. Tự động scan workspace
+ *  2. Khởi tạo tất cả capabilities (router, skills, memory, evolution)
+ *  3. Đợi input từ người dùng
+ *  4. Mỗi input → AutoApply → capability → verify → cleanup
  *
  * Usage:
  *   npx tsx auto-apply/smart_runner.ts              # Interactive (default)
@@ -43,188 +43,177 @@ const BANNER = `
 ║                                                              ║
 ║   🤖  MAUTOMA AGENT — SMART RUNNER                           ║
 ║                                                              ║
-║   Automatically detect & apply every capability             ║
-║   of the system. No commands needed!                        ║
+║   Tự động phát hiện & áp dụng mọi capabilities            ║
+║   của hệ thống. Không cần lệnh!                            ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝`;
 
 // ==================== CAPABILITY STATUS ====================
-
-/** Safely extract a string message from an unknown thrown value. */
-function errorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === 'string') return err;
-  try {
-    return JSON.stringify(err);
-  } catch {
-    return String(err);
-  }
-}
-
-/**
- * Run a status check and print a row.
- * Returns true if `fn` succeeded, false otherwise.
- */
-function statusRow(label: string, fn: () => string, _fallback = 'Not initialized'): boolean {
-  try {
-    const detail = fn();
-    console.log(`  ✅ ${label.padEnd(22)} ${detail}`);
-    return true;
-  } catch (err) {
-    console.log(`  ❌ ${label.padEnd(22)} Error: ${errorMessage(err)}`);
-    return false;
-  }
-}
-
-/** Same as statusRow but uses a ⚠️ marker when the call is expected to be optional. */
-function statusRowSoft(label: string, fn: () => string, fallback = 'Not initialized'): void {
-  try {
-    const detail = fn();
-    console.log(`  ✅ ${label.padEnd(22)} ${detail}`);
-  } catch {
-    console.log(`  ⚠️  ${label.padEnd(22)} ${fallback}`);
-  }
-}
 
 async function showCapabilitiesStatus(): Promise<void> {
   console.log('\n📊 System Capabilities Status\n');
   console.log('─'.repeat(60));
 
   // 1. CapabilityRouter
-  statusRow('CapabilityRouter', () => {
-    const router = createCapabilityRouter({ defaultLanguage: 'vi' });
+  try {
+    const _router = createCapabilityRouter({ defaultLanguage: 'vi' });
     const axes = CAPABILITY_AXES.map((a) => a.axis).join(', ');
-    void router;
-    return `${CAPABILITY_AXES.length} axes: ${axes}`;
-  });
+    console.log(`  ✅ CapabilityRouter   — ${CAPABILITY_AXES.length} axes: ${axes}`);
+  } catch (err: unknown) {
+    console.log(`  ❌ CapabilityRouter   — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   // 2. Skill Manager
-  statusRow('SkillManager', () => {
+  try {
     const registry = getSkillRegistry();
     const skills = registry.getAll();
+    console.log(`  ✅ SkillManager       — ${skills.length} skills loaded`);
     for (const skill of skills.slice(0, 5)) {
       console.log(`     • ${skill.name} (${skill.version})`);
     }
     if (skills.length > 5) console.log(`     ... +${skills.length - 5} more`);
-    return `${skills.length} skills loaded`;
-  });
+  } catch (err: unknown) {
+    console.log(`  ❌ SkillManager       — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   // 3. Memory
-  statusRowSoft(
-    'Memory Store',
-    () => {
-      const mem = getMemoryManager();
-      const recent = mem.getRelevantContext ? mem.getRelevantContext('recent', 3) : [];
-      return `${recent.length} recent entries`;
-    },
-    'Not initialized (will init on first use)'
-  );
+  try {
+    const mem = getMemoryManager();
+    const recent = mem.getRelevantContext ? mem.getRelevantContext('recent', 3) : [];
+    console.log(`  ✅ Memory Store       — ${recent.length} recent entries`);
+  } catch (_) {
+    console.log(`  ⚠️  Memory Store       — Not initialized (will init on first use)`);
+  }
 
   // 4. Evolution
-  statusRow('Evolution Engine', () => {
-    void createEvolutionEngine();
-    return 'Ready (self-improving agents)';
-  });
+  try {
+    const _evo = createEvolutionEngine();
+    console.log(`  ✅ Evolution Engine   — Ready (self-improving agents)`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Evolution Engine   — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   // 5. CodeGraph
-  statusRowSoft(
-    'CodeGraph',
-    () => {
-      void createCodeGraphManager();
-      return 'Ready (code structure analysis)';
-    },
-    'Not initialized (will init on first use)'
-  );
+  try {
+    const _cg = createCodeGraphManager();
+    console.log(`  ✅ CodeGraph          — Ready (code structure analysis)`);
+  } catch (_) {
+    console.log(`  ⚠️  CodeGraph          — Not initialized (will init on first use)`);
+  }
 
   // 6. TaskPlanner
-  statusRow('Task Planner', () => {
-    void getTaskPlanner();
-    return 'Ready (project decomposition)';
-  });
+  try {
+    const _tp = getTaskPlanner();
+    console.log(`  ✅ Task Planner       — Ready (project decomposition)`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Task Planner       — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   // 7. File Cleaner
-  statusRow('File Cleaner', () => 'Auto-cleanup AI artifacts (REQUIRED)');
+  try {
+    console.log(`  ✅ File Cleaner       — Auto-cleanup AI artifacts (BẮT BUỘC)`);
+  } catch (err: unknown) {
+    console.log(`  ❌ File Cleaner       — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   // 8. Workspace analysis
-  statusRowSoft(
-    'Workspace',
-    () => {
-      const cg = createCodeGraphManager();
-      const stats = cg.getStats();
-      return `${stats.totalFiles || 0} files analyzed`;
-    },
-    'Analysis skipped'
-  );
+  try {
+    const stats = _cg.getStats();
+    console.log(`  ✅ Workspace          — ${stats.totalFiles || 0} files analyzed`);
+  } catch (err: unknown) {
+    console.log(`  ⚠️  Workspace          — Analysis skipped: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 9. Computer Control
-  statusRow('Computer Control', () => {
-    void createComputerControl();
-    void createWorkflows();
-    return '5 components: keyboard/mouse/screen/automation/workflows';
-  });
+  // 9. Computer Control (5 components)
+  try {
+    createComputerControl();
+    createWorkflows();
+    console.log(`  ✅ Computer Control   — 5 components: keyboard/mouse/screen/automation/workflows`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Computer Control   — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 10. Verification
-  statusRow('Verification', () => {
-    void createVerificationEngine();
-    return 'LATS tree search + Committee review + Self-RAG';
-  });
+  // 10. Verification (LATS + committee + self-RAG)
+  try {
+    createVerificationEngine();
+    console.log(`  ✅ Verification       — LATS tree search + Committee review + Self-RAG`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Verification       — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 11. Executor
-  statusRow('Executor', () => {
-    void getExecutor();
-    return 'Autonomous runner + Subagent coordinator';
-  });
+  // 11. Executor (autonomous runner + subagent coordinator)
+  try {
+    getExecutor();
+    console.log(`  ✅ Executor           — Autonomous runner + Subagent coordinator`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Executor           — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 12. Error Recovery
-  statusRow('Error Recovery', () => {
-    void createErrorLearner();
-    return 'Pattern DB + Retry strategies';
-  });
+  // 12. Error Recovery (pattern DB + retry)
+  try {
+    createErrorLearner();
+    console.log(`  ✅ Error Recovery     — Pattern DB + Retry strategies`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Error Recovery     — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 13. Agent Orchestration
-  statusRow('Agent Orchestr.', () => {
-    void createAgentEscalationEngine();
-    void createTeamOrchestrator();
-    return '5 teams (Supervisor/Arena/Interrogate/Debate/Hierarchical)';
-  });
+  // 13. Agent Orchestration (5 teams + 5-tier escalation)
+  try {
+    createAgentEscalationEngine();
+    createTeamOrchestrator();
+    console.log(`  ✅ Agent Orchestr.    — 5 teams (Supervisor/Arena/Interrogate/Debate/Hierarchical)`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Agent Orchestr.    — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 14. CLEAR Evaluation
-  statusRow('CLEAR Evaluator', () => {
-    void getCLEAREvaluator();
-    return 'Cost/Latency/Efficacy/Assurance/Reliability';
-  });
+  // 14. Evaluation (CLEAR framework)
+  try {
+    getCLEAREvaluator();
+    console.log(`  ✅ CLEAR Evaluator    — Cost/Latency/Efficacy/Assurance/Reliability`);
+  } catch (err: unknown) {
+    console.log(`  ❌ CLEAR Evaluator    — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 15. SessionGuard
-  statusRow('SessionGuard', () => {
-    void getSessionGuard({ maxRequestsPerMinute: 60 });
-    return 'HMAC + Rate limit + Audit log';
-  });
+  // 15. Security: SessionGuard
+  try {
+    getSessionGuard({ maxRequestsPerMinute: 60 });
+    console.log(`  ✅ SessionGuard       — HMAC + Rate limit + Audit log`);
+  } catch (err: unknown) {
+    console.log(`  ❌ SessionGuard       — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 16. DisputeSession
-  statusRow('DisputeSession', () => {
-    void getDisputeSessionManager();
-    return '6 candidates + Elo champion selection';
-  });
+  // 16. Security: DisputeSession
+  try {
+    getDisputeSessionManager();
+    console.log(`  ✅ DisputeSession     — 6 candidates + Elo champion selection`);
+  } catch (err: unknown) {
+    console.log(`  ❌ DisputeSession     — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
-  // 17. Cursor Skills
-  statusRow('Cursor Skills', () => {
+  // 17. Cursor Skills (32 skills in .cursor/skills/)
+  try {
     const skillsDir = path.resolve(__dirname, '..', '.cursor', 'skills');
-    let count = 0;
+    let skillCount = 0;
     if (fs.existsSync(skillsDir)) {
-      count = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).length;
+      skillCount = fs.readdirSync(skillsDir, { withFileTypes: true })
+        .filter((d) => d.isDirectory()).length;
     }
-    return `${count} curated skills (arena, architect, tdd, etc.)`;
-  });
+    console.log(`  ✅ Cursor Skills      — ${skillCount} curated skills (arena, architect, tdd, etc.)`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Cursor Skills      — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   // 18. Skill Orchestrator
-  statusRow('Skill Orchestr.', () => {
-    void createSkillOrchestrator({});
-    return 'Multi-skill execution plans';
-  });
+  try {
+    createSkillOrchestrator({});
+    console.log(`  ✅ Skill Orchestr.    — Multi-skill execution plans`);
+  } catch (err: unknown) {
+    console.log(`  ❌ Skill Orchestr.    — Error: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   console.log('─'.repeat(60));
-  console.log('\n  📌 Enter your request in Vietnamese or English!');
-  console.log('  📌 Type "status" to see capabilities, "quit" to exit.\n');
+  console.log('\n  📌 Nhập yêu cầu bằng tiếng Việt hoặc tiếng Anh!');
+  console.log('  📌 Gõ "status" để xem lại capabilities, "quit" để thoát.\n');
 }
 
 // ==================== INTERACTIVE MODE ====================
@@ -239,7 +228,7 @@ async function interactiveMode(): Promise<void> {
 
   const prompt = (): Promise<string> =>
     new Promise((resolve) => {
-      rl.question('\n🤖 You: ', (answer) => resolve(answer.trim()));
+      rl.question('\n🤖 Bạn: ', (answer) => resolve(answer.trim()));
     });
 
   // Show capabilities on start
@@ -253,7 +242,7 @@ async function interactiveMode(): Promise<void> {
       if (!input) continue;
 
       if (input === 'quit' || input === 'exit' || input === 'q') {
-        console.log('\n👋 Goodbye! Auto cleanup before exit...');
+        console.log('\n👋 Tạm biệt! Tự động cleanup trước khi thoát...');
         try {
           const report = await cleanupAIArtifacts({ verbose: false });
           console.log(`🧹 Cleanup: deleted ${report.deleted}, merged ${report.mergedIntoNotes}`);
@@ -270,26 +259,26 @@ async function interactiveMode(): Promise<void> {
 
       if (input === 'help') {
         console.log(`
-📖 Usage:
+📖 Hướng dẫn sử dụng:
 
-  1. State your request in natural language
-     Examples:
-       "Create an e-commerce website"
-       "Analyze the code and find bugs"
-       "Install a new plugin"
-       "Plan this project"
-       "Refactor the entire project"
+  1. Nói yêu cầu bằng ngôn ngữ tự nhiên
+     Ví dụ:
+       "Tạo website bán hàng"
+       "Phân tích code và tìm lỗi"
+       "Cài plugin mới"
+       "Lên kế hoạch dự án này"
+       "Refactor toàn bộ project"
 
-  2. The system automatically:
-       ✓ Detects intent from the request
-       ✓ Selects the right capabilities
-       ✓ Runs them in priority order
-       ✓ Cleans up leftover files before finishing
+  2. Hệ thống tự động:
+       ✓ Phát hiện intent từ yêu cầu
+       ✓ Chọn capabilities phù hợp
+       ✓ Chạy theo thứ tự ưu tiên
+       ✓ Dọn file thừa trước khi kết thúc
 
-  3. Special commands:
-       status  — Show capability status
-       quit    — Exit (with auto cleanup)
-       help    — Show this help
+  3. Lệnh đặc biệt:
+       status  — Xem trạng thái capabilities
+       quit    — Thoát (tự động cleanup)
+       help    — Hiển thị hướng dẫn này
 `);
         continue;
       }
@@ -305,8 +294,8 @@ async function interactiveMode(): Promise<void> {
       console.log(`   Axes triggered: ${result.axesTriggered.join(', ') || 'none'}`);
       console.log(`   Duration: ${Math.round(result.durationMs / 1000)}s`);
       console.log(`   Status: ${result.success ? '✅ SUCCESS' : '⚠️ COMPLETED WITH ERRORS'}`);
-    } catch (err) {
-      console.error(`\n❌ Error: ${errorMessage(err)}`);
+    } catch (err: unknown) {
+      console.error(`\n❌ Error: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 }
@@ -361,7 +350,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error('\n❌ Fatal:', err.message);
+main().catch((err: unknown) => {
+  console.error('\n❌ Fatal:', err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

@@ -30,7 +30,7 @@ export function getSkillRegistry(): SkillRegistry {
   };
 }
 
-export function createSkillOrchestrator(_config: Record<string, unknown> = {}): {
+export function createSkillOrchestrator(_config?: Record<string, unknown>): {
   plan(): Promise<{ steps: unknown[] }>;
 } {
   return { plan: async () => ({ steps: [] }) };

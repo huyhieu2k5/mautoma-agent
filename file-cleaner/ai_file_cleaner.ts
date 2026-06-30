@@ -126,60 +126,69 @@ export class AIFileCleaner {
     for (const file of candidates) {
       scanned++;
       const rel = path.relative(this.rootDir, file);
-      const stat = fs.statSync(file);
-      const size = stat.size;
-      const content = this.safeRead(file);
-      const reason = this.classify(file);
 
-      if (!reason) {
-        continue;
-      }
+      // Wrap individual file processing to survive concurrent deletions (TOCTOU guard)
+      try {
+        if (!fs.existsSync(file)) {
+          this.log(`[cleaner] SKIP → ${rel} (already gone)`);
+          continue;
+        }
+        const stat = fs.statSync(file);
+        const size = stat.size;
+        const content = this.safeRead(file);
+        const reason = this.classify(file);
 
-      // Nếu file có nội dung đáng giữ (≥ 50 chars), merge vào AI_NOTES.md
-      const isContentWorthy = content !== null && content.trim().length >= 50;
+        if (!reason) {
+          kept++;
+          continue;
+        }
 
-      if (isContentWorthy) {
-        if (!this.dryRun) {
-          this.appendToNotes(rel, content!, reason);
+        const isContentWorthy = content !== null && content.trim().length >= 50;
+
+        if (isContentWorthy) {
+          if (!this.dryRun) {
+            this.appendToNotes(rel, content!, reason);
+          }
+          merged++;
+          details.push({
+            file: rel,
+            action: 'merged_into_notes',
+            reason,
+            size,
+            contentPreview: content!.slice(0, 120),
+          });
+          if (!this.dryRun && fs.existsSync(file)) {
+            fs.unlinkSync(file);
+          }
+          this.log(`[cleaner] MERGED → ${rel}`);
+        } else if (size === 0) {
+          if (!this.dryRun && fs.existsSync(file)) {
+            fs.unlinkSync(file);
+          }
+          deleted++;
+          details.push({
+            file: rel,
+            action: 'deleted',
+            reason: reason + ' (empty)',
+            size: 0,
+          });
+          this.log(`[cleaner] DELETED (empty) → ${rel}`);
+        } else {
+          if (!this.dryRun && fs.existsSync(file)) {
+            fs.unlinkSync(file);
+          }
+          deleted++;
+          details.push({
+            file: rel,
+            action: 'deleted',
+            reason,
+            size,
+          });
+          this.log(`[cleaner] DELETED → ${rel}`);
         }
-        merged++;
-        details.push({
-          file: rel,
-          action: 'merged_into_notes',
-          reason,
-          size,
-          contentPreview: content!.slice(0, 120),
-        });
-        if (!this.dryRun) {
-          fs.unlinkSync(file);
-        }
-        this.log(`[cleaner] MERGED → ${rel}`);
-      } else if (size === 0) {
-        // File rỗng → xoá luôn không cần merge
-        if (!this.dryRun) {
-          fs.unlinkSync(file);
-        }
-        deleted++;
-        details.push({
-          file: rel,
-          action: 'deleted',
-          reason: reason + ' (empty)',
-          size: 0,
-        });
-        this.log(`[cleaner] DELETED (empty) → ${rel}`);
-      } else {
-        // Nội dung ngắn, không có giá trị → xoá
-        if (!this.dryRun) {
-          fs.unlinkSync(file);
-        }
-        deleted++;
-        details.push({
-          file: rel,
-          action: 'deleted',
-          reason,
-          size,
-        });
-        this.log(`[cleaner] DELETED → ${rel}`);
+      } catch (fsErr: unknown) {
+        const errMsg = fsErr instanceof Error ? fsErr.message : String(fsErr);
+        this.log(`[cleaner] ERROR on ${rel}: ${errMsg}`);
       }
     }
 
@@ -277,7 +286,13 @@ export class AIFileCleaner {
 
     const result: string[] = [];
 
+    const visited = new Set<string>();
+
     const walk = (dir: string) => {
+      const realDir = fs.realpathSync.native ? fs.realpathSync.native(dir) : dir;
+      if (visited.has(realDir)) return;
+      visited.add(realDir);
+
       let entries: fs.Dirent[];
       try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -287,6 +302,7 @@ export class AIFileCleaner {
       for (const entry of entries) {
         if (entry.name.startsWith('.') && IGNORE_DIRS.has(entry.name)) continue;
         if (IGNORE_DIRS.has(entry.name)) continue;
+        if (entry.isSymbolicLink()) continue;
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) {
           walk(full);

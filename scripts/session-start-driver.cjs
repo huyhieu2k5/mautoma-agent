@@ -113,22 +113,10 @@ const INLINE_ROUTER = {
 };
 
 /**
- * Try to use the real TS implementation if `tsx` is reachable and the
- * capability-router source exists. Falls back to INLINE_ROUTER otherwise.
+ * NOTE: The real TS capability-router lives in `capability-router/index.ts`.
+ * The `loadRealRouter` stub is kept for future v1.1.0 when bundling is
+ * implemented. Currently the INLINE_ROUTER is always used (v1.0.x).
  */
-async function loadRealRouter(pluginRoot) {
-  const routerPath = path.join(pluginRoot, 'capability-router', 'index.ts');
-  if (!fs.existsSync(routerPath)) return null;
-  const tsxBin = path.join(
-    pluginRoot,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx'
-  );
-  if (!fs.existsSync(tsxBin)) return null;
-  return null; // Real impl requires bundling; ship the inline stub for v1.0.2.
-}
-
 async function main() {
   const stdinText = await readStdin();
   let payload = null;
@@ -139,8 +127,7 @@ async function main() {
   }
 
   const pluginRoot = resolvePluginRoot();
-  const realRouter = await loadRealRouter(pluginRoot);
-  const router = realRouter || INLINE_ROUTER;
+  const router = INLINE_ROUTER;
 
   let decision;
   try {
@@ -174,11 +161,13 @@ async function main() {
     pluginRoot,
     championId: decision.championId,
     disputeSessionId: decision.disputeSession?.sessionId ?? null,
-    disputeStatus: decision.disputeSession?.status ?? 'resolved',
+    disputeStatus: decision.disputeSession !== null
+      ? (decision.disputeSession.status ?? 'resolved')
+      : 'no_session',
     primary: decision.primary,
     participants: decision.disputeSession?.participants ?? 0,
     auditLogged: decision.disputeSession?.auditLogged ?? false,
-    routerSource: realRouter ? 'bundled' : 'inline',
+    routerSource: 'inline',
     timestamp: new Date().toISOString(),
   };
 

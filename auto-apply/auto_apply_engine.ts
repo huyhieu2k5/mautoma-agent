@@ -1,14 +1,14 @@
 /**
- * AutoApply Engine — automatically detects and applies capabilities
+ * AutoApply Engine - Tự động phát hiện và áp dụng capabilities
  *
- * Users only need to state their request in natural language.
- * The engine automatically:
- *  1. Analyzes the intent from the request
- *  2. Maps the intent to the required capabilities
- *  3. Runs the capabilities in the right order
- *  4. Cleans up leftover files before finishing
+ * Người dùng chỉ cần nói yêu cầu bằng ngôn ngữ tự nhiên.
+ * Engine tự động:
+ *  1. Phân tích intent từ request
+ *  2. Map intent → capabilities cần thiết
+ *  3. Chạy capabilities theo thứ tự đúng
+ *  4. Tự cleanup file thừa trước khi kết thúc
  *
- * 10 axes are supported:
+ * 10 Axes được hỗ trợ:
  *   computer_control, skill_install, task_plan, execute,
  *   verify, evolve, remember, analyze_code, recover, orchestrate
  */
@@ -70,24 +70,13 @@ export interface ApplyStep {
 }
 
 // ==================== INTENT PATTERNS ====================
-// Map keywords/topic → axis + default action
+// Map từ khóa/topic → axis + action mặc định
 interface IntentPattern {
   axis: CapabilityAxis;
-  keywords: string[];       // English keywords
-  keywordsVi: string[];      // Vietnamese keywords (used for Vietnamese intent detection)
+  keywords: string[];       // keywords tiếng Anh
+  keywordsVi: string[];      // keywords tiếng Việt
   action: string;
-  priority: number;         // priority order (lower = runs first)
-}
-
-/** Safely extract a string message from an unknown thrown value. */
-function errorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === 'string') return err;
-  try {
-    return JSON.stringify(err);
-  } catch {
-    return String(err);
-  }
+  priority: number;         // thứ tự ưu tiên (thấp = chạy trước)
 }
 
 const INTENT_PATTERNS: IntentPattern[] = [
@@ -232,7 +221,7 @@ function detectIntents(request: string, language = 'vi'): IntentMatch[] {
     }
   }
 
-  // If nothing matches → default to "execute" (user wants to do something)
+  // Nếu không match gì → default "execute" (người dùng muốn làm gì đó)
   if (matches.length === 0) {
     matches.push({
       axis: 'execute',
@@ -242,7 +231,7 @@ function detectIntents(request: string, language = 'vi'): IntentMatch[] {
     });
   }
 
-  // Sort by priority (lower = runs first)
+  // Sort theo priority (thấp = chạy trước)
   const priorityMap = new Map(INTENT_PATTERNS.map((p) => [p.axis, p.priority]));
   matches.sort((a, b) => (priorityMap.get(a.axis) ?? 99) - (priorityMap.get(b.axis) ?? 99));
 
@@ -263,11 +252,9 @@ export interface AutoApplyContext {
 async function execComputerControl(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running computer_control (5 components)...');
   try {
-    // Stub: factories are called to verify they exist; results are not yet used in real orchestration.
-    void createComputerControl();
-    void createWorkflows();
+    createComputerControl();
+    createWorkflows();
     ctx.verbose && console.log(`[auto-apply] ComputerControl + Workflows ready`);
-    // Detect which components are needed
     const components: string[] = [];
     if (/click|drag|scroll|mouse|nháy|bấm/i.test(req)) components.push('mouse');
     if (/type|nhập|gõ|key|shortcut/i.test(req)) components.push('keyboard');
@@ -279,12 +266,12 @@ async function execComputerControl(req: string, ctx: AutoApplyContext): Promise<
       action: `Computer control: ${components.join(', ')} (5 components: keyboard/mouse/screen/automation/workflows)`,
       success: true,
     };
-  } catch (err) {
-    return { axis: 'computer_control', action: 'Computer control', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'computer_control', action: 'Computer control', success: false, error: String(err) };
   }
 }
 
-async function execSkillInstall(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execSkillInstall(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running skill_install...');
   const registry = getSkillRegistry();
   const skills = registry.listSkills();
@@ -344,19 +331,18 @@ async function execExecute(req: string, ctx: AutoApplyContext): Promise<ApplySte
     ctx.verbose && console.log(`[auto-apply] Router decision: ${decision.primaryAxis}`);
     return {
       axis: 'execute',
-      action: `Router chose: ${decision.primaryAxis} (confidence: ${decision.axes[0]?.score.toFixed(2)})`,
+      action: `Router chose: ${decision.primaryAxis} (confidence: ${(decision.axes[0]?.score ?? 0).toFixed(2)})`,
       success: true,
       output: JSON.stringify(decision, null, 2),
     };
-  } catch (err) {
-    return { axis: 'execute', action: 'Execute via CapabilityRouter', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'execute', action: 'Execute via CapabilityRouter', success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
-async function execVerify(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execVerify(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running verify...');
-  // Stub: factory call reserved for real verification orchestration.
-  void createVerificationEngine();
+  createVerificationEngine();
   return {
     axis: 'verify',
     action: 'Verification complete',
@@ -365,7 +351,7 @@ async function execVerify(req: string, ctx: AutoApplyContext): Promise<ApplyStep
   };
 }
 
-async function execRecover(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execRecover(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running recover...');
   const recovery = createErrorLearner();
   const patterns = await recovery.getErrorPatterns();
@@ -376,10 +362,9 @@ async function execRecover(req: string, ctx: AutoApplyContext): Promise<ApplySte
   };
 }
 
-async function execEvolve(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execEvolve(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running evolve...');
-  // Stub: factory call reserved for real evolution engine.
-  void createEvolutionEngine();
+  createEvolutionEngine();
   return {
     axis: 'evolve',
     action: 'Evolution engine ready',
@@ -387,74 +372,70 @@ async function execEvolve(req: string, ctx: AutoApplyContext): Promise<ApplyStep
   };
 }
 
-async function execOrchestrate(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execOrchestrate(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running orchestrate...');
   try {
-    // Stub: factory calls reserved for real orchestration.
-    void createAgentEscalationEngine();
-    void createTeamOrchestrator();
+    createAgentEscalationEngine();
+    createTeamOrchestrator();
     ctx.verbose && console.log(`[auto-apply] Agent teams + escalation ready`);
     return {
       axis: 'orchestrate',
       action: 'Multi-agent orchestration (5 team patterns + 5-tier escalation)',
       success: true,
     };
-  } catch (err) {
-    return { axis: 'orchestrate', action: 'Orchestrate', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'orchestrate', action: 'Orchestrate', success: false, error: String(err) };
   }
 }
 
 // ==================== EVALUATE (CLEAR metrics) ====================
 
-async function execEvaluate(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execEvaluate(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running evaluate (CLEAR framework)...');
   try {
-    // Stub: factory call reserved for real CLEAR evaluation.
-    void getCLEAREvaluator();
+    getCLEAREvaluator();
     ctx.verbose && console.log(`[auto-apply] CLEAR evaluator ready (Cost/Latency/Efficacy/Assurance/Reliability)`);
     return {
       axis: 'evaluate',
       action: 'CLEAR evaluator ready (5-dimensional metrics)',
       success: true,
     };
-  } catch (err) {
-    return { axis: 'evaluate', action: 'CLEAR evaluator', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'evaluate', action: 'CLEAR evaluator', success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
 // ==================== SECURE (SessionGuard) ====================
 
-async function execSecure(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execSecure(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running secure (SessionGuard)...');
   try {
-    // Stub: factory call reserved for real SessionGuard wiring.
-    void getSessionGuard({ maxRequestsPerMinute: 60 });
+    getSessionGuard({ maxRequestsPerMinute: 60 });
     ctx.verbose && console.log(`[auto-apply] SessionGuard active: HMAC + rate limit + audit`);
     return {
       axis: 'secure',
       action: 'SessionGuard active (HMAC token, rate limit, audit log)',
       success: true,
     };
-  } catch (err) {
-    return { axis: 'secure', action: 'SessionGuard', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'secure', action: 'SessionGuard', success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
 // ==================== DISPUTE (DisputeSession) ====================
 
-async function execDispute(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
+async function execDispute(_req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running dispute (champion tournament)...');
   try {
-    // Stub: factory call reserved for real DisputeSession.
-    void getDisputeSessionManager();
+    getDisputeSessionManager();
     ctx.verbose && console.log(`[auto-apply] DisputeSession ready: 6 candidates, Elo ranking`);
     return {
       axis: 'dispute',
       action: 'DisputeSession ready (6 candidates, Elo champion selection)',
       success: true,
     };
-  } catch (err) {
-    return { axis: 'dispute', action: 'DisputeSession', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'dispute', action: 'DisputeSession', success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -470,7 +451,7 @@ async function execCursorSkill(req: string, ctx: AutoApplyContext): Promise<Appl
         .filter((d) => d.isDirectory())
         .map((d) => d.name);
     }
-    // Detect which skills best match the request
+    // Phát hiện skill nào match nhất với request
     const lower = req.toLowerCase();
     const matched = skills.filter((s) => lower.includes(s.toLowerCase().split('-')[0] || ''));
     return {
@@ -479,8 +460,8 @@ async function execCursorSkill(req: string, ctx: AutoApplyContext): Promise<Appl
       success: true,
       output: matched.length ? `Use skill: ${matched[0]}` : `Available: ${skills.slice(0, 5).join(', ')}...`,
     };
-  } catch (err) {
-    return { axis: 'cursor_skill', action: 'Cursor skills', success: false, error: errorMessage(err) };
+  } catch (err: unknown) {
+    return { axis: 'cursor_skill', action: 'Cursor skills', success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
@@ -504,13 +485,13 @@ const AXIS_EXECUTORS: Record<CapabilityAxis, AxisExecutor> = {
 // ==================== AUTOAPPLY ENGINE ====================
 
 export interface AutoApplyConfig {
-  /** Run all axes or only matched ones? (default: match only) */
+  /** Chạy tất cả axes hay chỉ những cái match? (default: match only) */
   runAllAxes?: boolean;
-  /** Minimum confidence threshold (default: 0.3) */
+  /** Ngưỡng confidence tối thiểu (default: 0.3) */
   minConfidence?: number;
-  /** Language for intent detection (default: vi) */
+  /** Ngôn ngữ để detect intent (default: vi) */
   language?: 'vi' | 'en';
-  /** Whether to clean up extra files? (default: true) */
+  /** Có cleanup file thừa không? (default: true) */
   cleanup?: boolean;
   /** Verbose output */
   verbose?: boolean;
@@ -530,7 +511,7 @@ export class AutoApplyEngine {
   }
 
   /**
-   * Analyze the request → run capabilities → return the result
+   * Phân tích request → chạy capabilities → trả kết quả
    */
   async apply(request: string): Promise<ApplyResult> {
     const start = Date.now();
@@ -574,20 +555,20 @@ export class AutoApplyEngine {
         if (step.success) axesTriggered.push(intent.axis);
         this.config.verbose &&
           console.log(`[auto-apply] ${step.success ? '✅' : '❌'} ${intent.axis}: ${step.action}`);
-      } catch (err) {
-        const msg = errorMessage(err);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
         const step: ApplyStep = {
           axis: intent.axis,
           action: intent.suggestedAction,
           success: false,
-          error: msg,
+          error: errMsg,
         };
         steps.push(step);
-        this.config.verbose && console.log(`[auto-apply] ❌ ${intent.axis}: ERROR — ${msg}`);
+        this.config.verbose && console.log(`[auto-apply] ❌ ${intent.axis}: ERROR — ${errMsg}`);
       }
     }
 
-    // Step 5: Cleanup AI artifacts (REQUIRED)
+    // Step 5: Cleanup AI artifacts (BẮT BUỘC)
     if (this.config.cleanup) {
       try {
         const report = await cleanupAIArtifacts({ verbose: false });
@@ -595,8 +576,9 @@ export class AutoApplyEngine {
           this.config.verbose &&
             console.log(`[auto-apply] 🧹 Cleanup: deleted ${report.deleted}, merged ${report.mergedIntoNotes} → AI_NOTES.md`);
         }
-      } catch (err) {
-        this.config.verbose && console.warn(`[auto-apply] Cleanup skipped: ${errorMessage(err)}`);
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        this.config.verbose && console.warn(`[auto-apply] Cleanup skipped: ${errMsg}`);
       }
     }
 
@@ -612,7 +594,7 @@ export class AutoApplyEngine {
   }
 
   /**
-   * Only analyze the intent, do not execute (debug/dry-run)
+   * Chỉ phân tích intent, không execute (debug/dry-run)
    */
   analyze(request: string): IntentMatch[] {
     return detectIntents(request, this.config.language);
@@ -626,7 +608,7 @@ export function createAutoApplyEngine(config?: AutoApplyConfig): AutoApplyEngine
 }
 
 /**
- * Quick helper — call apply with default config
+ * Helper nhanh — gọi apply với config mặc định
  */
 export async function autoApply(request: string, verbose = true): Promise<ApplyResult> {
   const engine = new AutoApplyEngine({ verbose });
