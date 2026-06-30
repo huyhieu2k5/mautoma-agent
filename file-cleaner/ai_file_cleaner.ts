@@ -20,13 +20,13 @@ export interface CleanerOptions {
   rootDir?: string;
   /** Có ghi log chi tiết không */
   verbose?: boolean;
-  /** Có xoá thật hay chỉ dry-run */
+  /** Whether to actually delete files or just dry-run */
   dryRun?: boolean;
-  /** Các extension file coi là "do AI tạo" (mặc định: danh sách phổ biến) */
+  /** File extensions/names considered "AI-generated" (default: a common list) */
   aiPatterns?: RegExp[];
-  /** Các thư mục được phép quét (nếu rỗng → quét toàn bộ rootDir trừ node_modules/.git/dist) */
+  /** Directories to scan (empty = scan whole rootDir except node_modules/.git/dist) */
   scanDirs?: string[];
-  /** Tên file cần bảo vệ tuyệt đối (không bao giờ xoá) */
+  /** File names to protect absolutely (never delete) */
   protectedFiles?: string[];
 }
 
@@ -220,12 +220,12 @@ export class AIFileCleaner {
   }
 
   /**
-   * Xoá một section trong AI_NOTES.md (khi user nói "hết cần thiết")
+   * Remove a section in AI_NOTES.md (when the user says "no longer needed")
    */
   removeNoteSection(keyword: string): boolean {
     if (!fs.existsSync(this.notesPath)) return false;
     const text = fs.readFileSync(this.notesPath, 'utf8');
-    // Section bắt đầu bằng "## " và kết thúc trước "## " tiếp theo hoặc EOF
+    // Section starts with "## " and ends before the next "## " or EOF
     const lines = text.split('\n');
     const startIdx = lines.findIndex(
       (l) => l.startsWith('## ') && l.toLowerCase().includes(keyword.toLowerCase())
@@ -331,7 +331,7 @@ export async function cleanupAIArtifacts(opts: CleanerOptions = {}): Promise<Cle
 }
 
 /**
- * Helper: xoá 1 section trong AI_NOTES.md khi user nói "hết cần thiết"
+ * Helper: remove one section in AI_NOTES.md when the user says "no longer needed"
  */
 export function removeNote(keyword: string, rootDir = process.cwd()): boolean {
   const cleaner = new AIFileCleaner({ rootDir });

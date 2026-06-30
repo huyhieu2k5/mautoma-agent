@@ -1,6 +1,6 @@
 ---
 name: computer-control
-description: Điều khiển toàn bộ máy tính (keyboard, mouse, screen capture, vision, automation). Use for open, click, type, keyboard, mouse, screenshot, capture, browser, window, or any request to interact with UI/desktop.
+description: "Full computer control (keyboard, mouse, screen capture, vision, automation). Use for open, click, type, keyboard, mouse, screenshot, capture, browser, window, or any request to interact with UI/desktop."
 ---
 
 # Computer Control

@@ -1,18 +1,18 @@
 /**
- * AutoApply Engine module - Tự động phát hiện và áp dụng capabilities
+ * AutoApply Engine module — automatically detects and applies capabilities
  *
  * Usage:
  *   import { autoApply, createAutoApplyEngine } from './auto-apply';
  *
  *   // Quick
- *   const result = await autoApply('Tạo website bán hàng');
+ *   const result = await autoApply('Create an e-commerce website');
  *
  *   // Configurable
- *   const engine = createAutoApplyEngine({ verbose: true, language: 'vi' });
- *   const result = await engine.apply('Refactor code của tôi');
+ *   const engine = createAutoApplyEngine({ verbose: true, language: 'en' });
+ *   const result = await engine.apply('Refactor my code');
  *
  *   // Analyze only (dry-run)
- *   const intents = engine.analyze('Xây dựng API');
+ *   const intents = engine.analyze('Build a new API');
  *   console.log(intents);
  */
 

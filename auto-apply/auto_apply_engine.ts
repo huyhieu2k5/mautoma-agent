@@ -1,14 +1,14 @@
 /**
- * AutoApply Engine - Tự động phát hiện và áp dụng capabilities
+ * AutoApply Engine — automatically detects and applies capabilities
  *
- * Người dùng chỉ cần nói yêu cầu bằng ngôn ngữ tự nhiên.
- * Engine tự động:
- *  1. Phân tích intent từ request
- *  2. Map intent → capabilities cần thiết
- *  3. Chạy capabilities theo thứ tự đúng
- *  4. Tự cleanup file thừa trước khi kết thúc
+ * Users only need to state their request in natural language.
+ * The engine automatically:
+ *  1. Analyzes the intent from the request
+ *  2. Maps the intent to the required capabilities
+ *  3. Runs the capabilities in the right order
+ *  4. Cleans up leftover files before finishing
  *
- * 10 Axes được hỗ trợ:
+ * 10 axes are supported:
  *   computer_control, skill_install, task_plan, execute,
  *   verify, evolve, remember, analyze_code, recover, orchestrate
  */
@@ -70,13 +70,13 @@ export interface ApplyStep {
 }
 
 // ==================== INTENT PATTERNS ====================
-// Map từ khóa/topic → axis + action mặc định
+// Map keywords/topic → axis + default action
 interface IntentPattern {
   axis: CapabilityAxis;
-  keywords: string[];       // keywords tiếng Anh
-  keywordsVi: string[];      // keywords tiếng Việt
+  keywords: string[];       // English keywords
+  keywordsVi: string[];      // Vietnamese keywords (used for Vietnamese intent detection)
   action: string;
-  priority: number;         // thứ tự ưu tiên (thấp = chạy trước)
+  priority: number;         // priority order (lower = runs first)
 }
 
 /** Safely extract a string message from an unknown thrown value. */
@@ -232,7 +232,7 @@ function detectIntents(request: string, language = 'vi'): IntentMatch[] {
     }
   }
 
-  // Nếu không match gì → default "execute" (người dùng muốn làm gì đó)
+  // If nothing matches → default to "execute" (user wants to do something)
   if (matches.length === 0) {
     matches.push({
       axis: 'execute',
@@ -242,7 +242,7 @@ function detectIntents(request: string, language = 'vi'): IntentMatch[] {
     });
   }
 
-  // Sort theo priority (thấp = chạy trước)
+  // Sort by priority (lower = runs first)
   const priorityMap = new Map(INTENT_PATTERNS.map((p) => [p.axis, p.priority]));
   matches.sort((a, b) => (priorityMap.get(a.axis) ?? 99) - (priorityMap.get(b.axis) ?? 99));
 
@@ -267,7 +267,7 @@ async function execComputerControl(req: string, ctx: AutoApplyContext): Promise<
     void createComputerControl();
     void createWorkflows();
     ctx.verbose && console.log(`[auto-apply] ComputerControl + Workflows ready`);
-    // Phát hiện component nào cần dùng
+    // Detect which components are needed
     const components: string[] = [];
     if (/click|drag|scroll|mouse|nháy|bấm/i.test(req)) components.push('mouse');
     if (/type|nhập|gõ|key|shortcut/i.test(req)) components.push('keyboard');
@@ -470,7 +470,7 @@ async function execCursorSkill(req: string, ctx: AutoApplyContext): Promise<Appl
         .filter((d) => d.isDirectory())
         .map((d) => d.name);
     }
-    // Phát hiện skill nào match nhất với request
+    // Detect which skills best match the request
     const lower = req.toLowerCase();
     const matched = skills.filter((s) => lower.includes(s.toLowerCase().split('-')[0] || ''));
     return {
@@ -504,13 +504,13 @@ const AXIS_EXECUTORS: Record<CapabilityAxis, AxisExecutor> = {
 // ==================== AUTOAPPLY ENGINE ====================
 
 export interface AutoApplyConfig {
-  /** Chạy tất cả axes hay chỉ những cái match? (default: match only) */
+  /** Run all axes or only matched ones? (default: match only) */
   runAllAxes?: boolean;
-  /** Ngưỡng confidence tối thiểu (default: 0.3) */
+  /** Minimum confidence threshold (default: 0.3) */
   minConfidence?: number;
-  /** Ngôn ngữ để detect intent (default: vi) */
+  /** Language for intent detection (default: vi) */
   language?: 'vi' | 'en';
-  /** Có cleanup file thừa không? (default: true) */
+  /** Whether to clean up extra files? (default: true) */
   cleanup?: boolean;
   /** Verbose output */
   verbose?: boolean;
@@ -530,7 +530,7 @@ export class AutoApplyEngine {
   }
 
   /**
-   * Phân tích request → chạy capabilities → trả kết quả
+   * Analyze the request → run capabilities → return the result
    */
   async apply(request: string): Promise<ApplyResult> {
     const start = Date.now();
@@ -587,7 +587,7 @@ export class AutoApplyEngine {
       }
     }
 
-    // Step 5: Cleanup AI artifacts (BẮT BUỘC)
+    // Step 5: Cleanup AI artifacts (REQUIRED)
     if (this.config.cleanup) {
       try {
         const report = await cleanupAIArtifacts({ verbose: false });
@@ -612,7 +612,7 @@ export class AutoApplyEngine {
   }
 
   /**
-   * Chỉ phân tích intent, không execute (debug/dry-run)
+   * Only analyze the intent, do not execute (debug/dry-run)
    */
   analyze(request: string): IntentMatch[] {
     return detectIntents(request, this.config.language);
@@ -626,7 +626,7 @@ export function createAutoApplyEngine(config?: AutoApplyConfig): AutoApplyEngine
 }
 
 /**
- * Helper nhanh — gọi apply với config mặc định
+ * Quick helper — call apply with default config
  */
 export async function autoApply(request: string, verbose = true): Promise<ApplyResult> {
   const engine = new AutoApplyEngine({ verbose });

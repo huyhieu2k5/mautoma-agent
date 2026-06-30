@@ -1,6 +1,6 @@
 ---
 name: task-planner
-description: Phân rã dự án thành task tree, lập kế hoạch và lịch trình tự động. Use for plan, decompose, project, roadmap, milestone, schedule, "lên kế hoạch", "phân rã task".
+description: "Decompose projects into task trees, plan and schedule automatically. Use for plan, decompose, project, roadmap, milestone, schedule, \"lên kế hoạch\", \"phân rã task\"."
 ---
 
 # Task Planner

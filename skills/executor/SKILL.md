@@ -1,6 +1,6 @@
 ---
 name: executor
-description: Thực thi task tự động — autonomous runner, subagent coordinator, parallel execution. Use for run, execute, do it, implement, "chạy task", "thực thi tự động".
+description: "Task execution — autonomous runner, subagent coordinator, parallel execution. Use for run, execute, do it, implement, \"chạy task\", \"thực thi tự động\"."
 ---
 
 # Executor

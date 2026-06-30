@@ -1,6 +1,6 @@
 ---
 name: agent-orchestration
-description: Điều phối team/escalation — agent tiers (worker → specialist → manager → executive → supreme), teams (arena, interrogate, supervisor, hierarchical). Use for team, orchestrate, escalate, delegate, multi-agent, "đội", "giao cho".
+description: "Team coordination and escalation — agent tiers (worker → specialist → manager → executive → supreme), team patterns (arena, interrogate, supervisor, hierarchical). Use for team, orchestrate, escalate, delegate, multi-agent, \"team\", \"delegate\", \"giao cho\", \"đội\"."
 ---
 
 # Agent Orchestration

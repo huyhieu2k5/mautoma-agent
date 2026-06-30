@@ -1,26 +1,27 @@
 /**
- * CapabilityRouter CLI - Entry point để mọi caller (Cursor parent agent,
- * subagent, hook, hoặc user shell) đều có thể auto-route raw request qua
+ * CapabilityRouter CLI — Entry point so every caller (Cursor parent agent,
+ * subagent, hook, or user shell) can auto-route a raw request through
  * CapabilityRouter → dispute tournament → champion executes.
  *
- * Không cần biết TypeScript, không cần import. Gọi đơn giản:
+ * No TypeScript knowledge needed, no import needed. Simple usage:
  *
- *   npx tsx scripts/capability-router-cli.ts --raw "Refactor code của tôi"
+ *   npx tsx scripts/capability-router-cli.ts --raw "Refactor my code"
  *   npx tsx scripts/capability-router-cli.ts --raw "Open Chrome" --language en
  *   npx tsx scripts/capability-router-cli.ts --raw "..." --json
  *
- * Đây là implementation của "tự động áp dụng mọi skills mà user không cần yêu cầu":
- *   Cursor parent agent / hook chỉ cần shell exec câu lệnh này, plugin sẽ tự routing
- *   → chạy dispute tournament → chọn champion → trả về primary axis + championId.
+ * This implements "auto-apply every skill without the user having to ask":
+ *   The Cursor parent agent / hook just shell-execs this command; the plugin
+ *   routes the request → runs the dispute tournament → picks the champion →
+ *   returns the primary axis + championId.
  *
  * Output:
- *   - Mặc định: human-readable text (Vietnamese)
- *   - --json:    JSON cho machine consumption (parent agent parse dễ)
+ *   - Default: human-readable text (English)
+ *   - --json:    JSON for machine consumption (easy for parent agent to parse)
  *
  * Exit code:
  *   0 = route success
  *   1 = input invalid
- *   2 = routing failed (graceful fallback vẫn trả output)
+ *   2 = routing failed (graceful fallback still returns output)
  */
 
 import { createCapabilityRouter } from '../capability-router';
@@ -96,33 +97,33 @@ function parseArgs(argv: string[]): CliArgs {
 
 function printHelp(): void {
   console.log(`
-CapabilityRouter CLI - Auto-apply routing + dispute tournament cho mọi request
+CapabilityRouter CLI — Auto-apply routing + dispute tournament for every request
 
 USAGE:
   npx tsx scripts/capability-router-cli.ts --raw "<request text>" [options]
 
 OPTIONS:
-  --raw, -r <text>       Raw user request (BẮT BUỘC, hoặc truyền positional)
-  --language, -l <vi|en> Force language (mặc định: auto-detect)
-  --confidence, -c <0-1> Confidence threshold (mặc định: 0.4)
+  --raw, -r <text>       Raw user request (REQUIRED, or pass as positional)
+  --language, -l <vi|en> Force language (default: auto-detect)
+  --confidence, -c <0-1> Confidence threshold (default: 0.4)
   --skip-dispute         Skip dispute tournament (testing only)
-  --json                 Output JSON thay vì text
+  --json                 Output JSON instead of text
   --help, -h             Show this help
 
 EXAMPLES:
   # Route raw request (auto-detect language, run dispute)
-  npx tsx scripts/capability-router-cli.ts --raw "Refactor code của tôi"
+  npx tsx scripts/capability-router-cli.ts --raw "Refactor my code"
 
-  # English with JSON output (cho parent agent parse)
+  # English with JSON output (for parent agent parsing)
   npx tsx scripts/capability-router-cli.ts -r "Open Chrome" -l en --json
 
   # Positional raw text
-  npx tsx scripts/capability-router-cli.ts "Verify code đã pass test chưa"
+  npx tsx scripts/capability-router-cli.ts "Verify the code passed tests"
 
 OUTPUT (text mode):
   🎯 Primary axis:    <axis>
   📊 Score:           <0..1>
-  🏆 Champion agent:  <championId>  (sau dispute tournament)
+  🏆 Champion agent:  <championId>  (after dispute tournament)
   🆔 Dispute session: <sessionId>
   ⚡ Other axes:      [<axis1>, <axis2>, ...]
 
@@ -132,10 +133,11 @@ OUTPUT (JSON mode):
 EXIT CODES:
   0 = route success
   1 = input invalid (missing --raw, etc.)
-  2 = routing internal failure (fallback vẫn có output)
+  2 = routing internal failure (fallback still returns output)
 
-NOTE: Plugin tự động áp dụng routing cho MỌI request khi Cursor parent agent
-      shell-exec lệnh này, hoặc khi hooks/auto-router.cjs trigger trên mỗi message.
+NOTE: The plugin automatically applies routing for EVERY request when the
+      Cursor parent agent shell-execs this command, or when hooks/auto-router.cjs
+      triggers on each message.
 `);
 }
 
@@ -145,7 +147,7 @@ async function main(): Promise<void> {
     args = parseArgs(process.argv.slice(2));
   } catch (err) {
     console.error(`❌ ${(err as Error).message}`);
-    console.error('Use --help để xem usage.');
+    console.error('Use --help to see usage.');
     process.exit(1);
   }
 
@@ -155,7 +157,7 @@ async function main(): Promise<void> {
   }
 
   if (!args.raw || args.raw.trim().length === 0) {
-    console.error('❌ Thiếu --raw <text>. Dùng --help để xem usage.');
+    console.error('❌ Missing --raw <text>. Use --help to see usage.');
     process.exit(1);
   }
 
@@ -203,7 +205,7 @@ async function main(): Promise<void> {
         console.log(`⚡ Other axes:     ${axesList}`);
       }
       console.log('═══════════════════════════════════════════════════════════════');
-      console.log('→ Champion sẽ execute primary axis (skill/module auto-loaded)');
+      console.log('→ Champion will execute primary axis (skill/module auto-loaded)');
     }
   } catch (err) {
     exitCode = 2;
@@ -212,7 +214,7 @@ async function main(): Promise<void> {
       process.stdout.write(JSON.stringify({ error: errMsg, raw: args.raw }) + '\n');
     } else {
       console.error(`❌ Routing failed: ${errMsg}`);
-      console.error('Fallback: parent agent nên xử lý request thủ công với capability router state.');
+      console.error('Fallback: the parent agent should handle this request manually with the capability router state.');
     }
   }
 

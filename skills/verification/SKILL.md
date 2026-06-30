@@ -1,6 +1,6 @@
 ---
 name: verification
-description: Tự kiểm tra kết quả — self-verifying loop, LATS tree search, committee review, RAG. Use for verify, check, validate, review, "kiểm tra code", "xác minh", "đúng chưa".
+description: "Self-verification — self-verifying loop, LATS tree search, committee review, RAG. Use for verify, check, validate, review, \"kiểm tra code\", \"xác minh\", \"đúng chưa\"."
 ---
 
 # Verification
