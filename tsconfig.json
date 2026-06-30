@@ -27,23 +27,25 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "types": ["node"]
   },
   "include": [
-    "evolution/**/*.ts",
-    "memory-store/**/*.ts",
-    "skill-manager/**/*.ts",
-    "error-recovery/**/*.ts",
-    "task-planner/**/*.ts",
-    "executor/**/*.ts",
-    "index.ts",
-    "tests/**/*.ts"
+    "**/*.ts",
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
     "dist",
+    "coverage",
+    "runtime",
+    "tests/**",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.test.mts",
+    "**/*.spec.ts",
+    ".cursor/autonomous-memory",
+    ".cursor/skills",
+    "skills/test-skill-*/"
   ],
   "ts-node": {
     "require": ["tsconfig-paths/register"],

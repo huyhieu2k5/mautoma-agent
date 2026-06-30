@@ -82,6 +82,7 @@ async function runInteractive(opts: CliOptions): Promise<void> {
   const ask = (q: string): Promise<string> =>
     new Promise((resolve) => rl.question(q, (a) => resolve(a.trim())));
 
+  // eslint-disable-next-line no-constant-condition -- intentional interactive loop, breaks on 'quit'/'exit'/'q'
   while (true) {
     const input = await ask('\n🤖 mautoma> ');
     if (!input) continue;

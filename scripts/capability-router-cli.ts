@@ -68,7 +68,7 @@ function parseArgs(argv: string[]): CliArgs {
         args.skipDispute = true;
         break;
       case '--confidence':
-      case '-c':
+      case '-c': {
         const c = Number(next);
         if (isNaN(c) || c < 0 || c > 1) {
           throw new Error(`--confidence must be 0..1 (got: ${next})`);
@@ -76,6 +76,7 @@ function parseArgs(argv: string[]): CliArgs {
         args.confidenceThreshold = c;
         i++;
         break;
+      }
       case '--help':
       case '-h':
         args.help = true;
@@ -184,7 +185,7 @@ async function main(): Promise<void> {
         .join(', ');
       const ds = decision.disputeSession;
       const championLine = decision.championId
-        ? `${decision.championId} (dispute ${ds?.disputeStatus ?? 'resolved'})`
+        ? `${decision.championId} (dispute ${ds?.status ?? 'resolved'})`
         : 'skipped (runDisputeOnRoute=false)';
 
       console.log('═══════════════════════════════════════════════════════════════');
@@ -195,8 +196,8 @@ async function main(): Promise<void> {
       console.log(`🎯 Primary axis:   ${decision.primary}`);
       console.log(`📊 Score:          ${decision.score?.toFixed(3) ?? 'n/a'}`);
       console.log(`🏆 Champion agent: ${championLine}`);
-      if (ds?.disputeSessionId) {
-        console.log(`🆔 Dispute session: ${ds.disputeSessionId}`);
+      if (ds?.sessionId) {
+        console.log(`🆔 Dispute session: ${ds.sessionId}`);
       }
       if (axesList) {
         console.log(`⚡ Other axes:     ${axesList}`);

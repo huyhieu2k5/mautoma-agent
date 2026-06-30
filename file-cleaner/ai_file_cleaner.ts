@@ -85,11 +85,6 @@ const IGNORE_DIRS = new Set([
   'test-output',
 ]);
 
-const AI_SCAN_ONLY_DIRS = new Set([
-  // Chỉ quét root, không đi sâu vào các subdirs lớn
-  '.',
-]);
-
 export class AIFileCleaner {
   private rootDir: string;
   private verbose: boolean;
@@ -121,7 +116,7 @@ export class AIFileCleaner {
     let scanned = 0;
     let deleted = 0;
     let merged = 0;
-    let kept = 0;
+    const kept = 0;
 
     this.log(`[cleaner] Scanning ${this.rootDir} (dryRun=${this.dryRun})`);
 
@@ -243,7 +238,7 @@ export class AIFileCleaner {
         break;
       }
     }
-    const removed = lines.splice(startIdx, endIdx - startIdx).join('\n');
+    lines.splice(startIdx, endIdx - startIdx);
     fs.writeFileSync(this.notesPath, lines.join('\n'), 'utf8');
     return true;
   }
