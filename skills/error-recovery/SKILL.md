@@ -1,6 +1,6 @@
 ---
 name: error-recovery
-description: Phục hồi lỗi và học pattern — error learner, pattern DB, retry strategies. Use for fix bug, debug, error, recover, retry, patch, "sửa lỗi", "fix bug".
+description: "Error recovery and pattern learning — error learner, pattern DB, retry strategies. Use for fix bug, debug, error, recover, retry, patch, \"sửa lỗi\", \"fix bug\"."
 ---
 
 # Error Recovery

@@ -158,7 +158,7 @@ async function printStatus(opts: CliOptions): Promise<void> {
     verbose: false,
     language: opts.language,
   });
-  const demo = engine.analyze('Phân tích code và refactor');
+  const demo = engine.analyze('Analyze code and refactor');
 
   console.log('\n📊 mautoma-agent status\n' + '─'.repeat(48));
   console.log('  ✅ AutoApply engine       — intent detection ready');

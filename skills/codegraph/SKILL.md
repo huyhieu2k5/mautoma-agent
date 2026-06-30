@@ -1,6 +1,6 @@
 ---
 name: codegraph
-description: Phân tích codebase — code structure analyzer, LRU context cache, auto-cleaner. Use for analyze code, read code, understand, graph, codegraph, structure, parse.
+description: "Codebase analysis — code structure analyzer, LRU context cache, auto-cleaner. Use for analyze code, read code, understand, graph, codegraph, structure, parse."
 ---
 
 # Codegraph

@@ -1,11 +1,11 @@
 /**
- * SmartRunner - Entry point chạy tự động mọi thứ
+ * SmartRunner — Auto-running entry point
  *
- * Khi người dùng mở Cursor với project này, SmartRunner:
- *  1. Tự động scan workspace
- *  2. Khởi tạo tất cả capabilities (router, skills, memory, evolution)
- *  3. Đợi input từ người dùng
- *  4. Mỗi input → AutoApply → capability → verify → cleanup
+ * When a user opens Cursor with this project, SmartRunner:
+ *  1. Auto-scans the workspace
+ *  2. Initializes all capabilities (router, skills, memory, evolution)
+ *  3. Waits for user input
+ *  4. For each input → AutoApply → capability → verify → cleanup
  *
  * Usage:
  *   npx tsx auto-apply/smart_runner.ts              # Interactive (default)
@@ -43,8 +43,8 @@ const BANNER = `
 ║                                                              ║
 ║   🤖  MAUTOMA AGENT — SMART RUNNER                           ║
 ║                                                              ║
-║   Tự động phát hiện & áp dụng mọi capabilities            ║
-║   của hệ thống. Không cần lệnh!                            ║
+║   Automatically detect & apply every capability             ║
+║   of the system. No commands needed!                        ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝`;
 
@@ -143,7 +143,7 @@ async function showCapabilitiesStatus(): Promise<void> {
   });
 
   // 7. File Cleaner
-  statusRow('File Cleaner', () => 'Auto-cleanup AI artifacts (BẮT BUỘC)');
+  statusRow('File Cleaner', () => 'Auto-cleanup AI artifacts (REQUIRED)');
 
   // 8. Workspace analysis
   statusRowSoft(
@@ -223,8 +223,8 @@ async function showCapabilitiesStatus(): Promise<void> {
   });
 
   console.log('─'.repeat(60));
-  console.log('\n  📌 Nhập yêu cầu bằng tiếng Việt hoặc tiếng Anh!');
-  console.log('  📌 Gõ "status" để xem lại capabilities, "quit" để thoát.\n');
+  console.log('\n  📌 Enter your request in Vietnamese or English!');
+  console.log('  📌 Type "status" to see capabilities, "quit" to exit.\n');
 }
 
 // ==================== INTERACTIVE MODE ====================
@@ -239,7 +239,7 @@ async function interactiveMode(): Promise<void> {
 
   const prompt = (): Promise<string> =>
     new Promise((resolve) => {
-      rl.question('\n🤖 Bạn: ', (answer) => resolve(answer.trim()));
+      rl.question('\n🤖 You: ', (answer) => resolve(answer.trim()));
     });
 
   // Show capabilities on start
@@ -253,7 +253,7 @@ async function interactiveMode(): Promise<void> {
       if (!input) continue;
 
       if (input === 'quit' || input === 'exit' || input === 'q') {
-        console.log('\n👋 Tạm biệt! Tự động cleanup trước khi thoát...');
+        console.log('\n👋 Goodbye! Auto cleanup before exit...');
         try {
           const report = await cleanupAIArtifacts({ verbose: false });
           console.log(`🧹 Cleanup: deleted ${report.deleted}, merged ${report.mergedIntoNotes}`);
@@ -270,26 +270,26 @@ async function interactiveMode(): Promise<void> {
 
       if (input === 'help') {
         console.log(`
-📖 Hướng dẫn sử dụng:
+📖 Usage:
 
-  1. Nói yêu cầu bằng ngôn ngữ tự nhiên
-     Ví dụ:
-       "Tạo website bán hàng"
-       "Phân tích code và tìm lỗi"
-       "Cài plugin mới"
-       "Lên kế hoạch dự án này"
-       "Refactor toàn bộ project"
+  1. State your request in natural language
+     Examples:
+       "Create an e-commerce website"
+       "Analyze the code and find bugs"
+       "Install a new plugin"
+       "Plan this project"
+       "Refactor the entire project"
 
-  2. Hệ thống tự động:
-       ✓ Phát hiện intent từ yêu cầu
-       ✓ Chọn capabilities phù hợp
-       ✓ Chạy theo thứ tự ưu tiên
-       ✓ Dọn file thừa trước khi kết thúc
+  2. The system automatically:
+       ✓ Detects intent from the request
+       ✓ Selects the right capabilities
+       ✓ Runs them in priority order
+       ✓ Cleans up leftover files before finishing
 
-  3. Lệnh đặc biệt:
-       status  — Xem trạng thái capabilities
-       quit    — Thoát (tự động cleanup)
-       help    — Hiển thị hướng dẫn này
+  3. Special commands:
+       status  — Show capability status
+       quit    — Exit (with auto cleanup)
+       help    — Show this help
 `);
         continue;
       }

@@ -1,33 +1,33 @@
 ---
 name: autonomous-router
-description: Capability Router của cursor-peformance — tự động phân tích yêu cầu thô và trigger đúng module (computer-control, skill-manager, task-planner, executor, verification, evolution, memory-store, codegraph, error-recovery, agent-orchestration). Use cho bất kỳ yêu cầu nào cần AI tự làm, hoặc khi user nói "làm", "tạo", "sửa", "phân tích", "nhớ", "tối ưu", "tự động".
+description: "Capability Router for cursor-peformance — automatically analyzes raw requests and triggers the correct module (computer-control, skill-manager, task-planner, executor, verification, evolution, memory-store, codegraph, error-recovery, agent-orchestration). Use for any request that needs autonomous AI execution, or when the user says \"do\", \"create\", \"fix\", \"analyze\", \"remember\", \"optimize\", \"automate\"."
 ---
 
 # Autonomous Router
 
-Entry point thông minh của plugin `cursor-peformance`. Khi user đưa ra yêu cầu bất kỳ (tiếng Việt hoặc tiếng Anh), router sẽ:
+The intelligent entry point of the `cursor-peformance` plugin. When the user makes any request (in Vietnamese or English), the router will:
 
-1. Phân tích yêu cầu qua 10 capability axes
-2. **🛡️ BẮT BUỘC: Chạy 'cuộc chiến giành main agent' (dispute tournament)** với 6 candidates (Worker/Specialist/Manager/Executive) qua Elo + composite score
-3. Multi-label score từng axis (0..1)
-4. Trigger các module có score ≥ `confidenceThreshold` (mặc định 0.4) — champion quyết định route
-5. Mọi execution đi qua `SessionGuard` (security) và `HardenedAuditLog` (audit)
+1. Analyze the request across 10 capability axes
+2. **REQUIRED: Run the 'main agent battle' (dispute tournament)** with 6 candidates (Worker/Specialist/Manager/Executive) via Elo + composite score
+3. Multi-label score for each axis (0..1)
+4. Trigger modules with score ≥ `confidenceThreshold` (default 0.4) — champion decides the route
+5. All execution flows through `SessionGuard` (security) and `HardenedAuditLog` (audit)
 
-## ⚠️ MANDATORY SECURITY RULE
+## REQUIRED SECURITY RULE
 
-**KHÔNG BAO GIỜ bypass dispute tournament.** Mỗi `route()` call bắt buộc chạy 1 dispute session với 6 candidates. Đây là security contract không thể bypass:
+**NEVER bypass the dispute tournament.** Every `route()` call must run 1 dispute session with 6 candidates. This is a non-negotiable security contract:
 
-- Mặc định `runDisputeOnRoute: true`
-- Nếu muốn test code mà không chạy dispute, dùng `routeSync()` (chỉ tồn tại khi `runDisputeOnRoute: false`)
-- Mọi attempt bypass phải log vào audit chain qua `HardenedAuditLog`
+- Default `runDisputeOnRoute: true`
+- If you need to test code without running the dispute, use `routeSync()` (only exists when `runDisputeOnRoute: false`)
+- Any attempt to bypass must be logged to the audit chain via `HardenedAuditLog`
 
-## Khi nào invoke
+## When to invoke
 
-Auto-invoke khi:
+Auto-invoke when:
 
-- User đưa ra yêu cầu mơ hồ ("giúp tôi làm X", "cải thiện Y", "phân tích Z")
-- Câu chứa keyword thuộc bất kỳ 10 axes nào (xem bảng dưới)
-- Multi-step task mà user không chỉ định rõ module nào dùng
+- User makes an ambiguous request ("help me do X", "improve Y", "analyze Z")
+- Sentence contains keywords belonging to any of the 10 axes (see table below)
+- Multi-step task where user didn't specify which module to use
 
 | Axis | Module | Trigger keywords (VI) |
 |---|---|---|
@@ -46,7 +46,7 @@ Auto-invoke khi:
 
 ```typescript
 {
-  raw: string;              // Câu user (VI hoặc EN)
+  raw: string;              // User sentence (VI or EN)
   language?: 'vi' | 'en';
   context?: {
     projectPath?: string;
@@ -61,12 +61,12 @@ Auto-invoke khi:
 ```typescript
 {
   decision: {
-    primary: CapabilityAxis,        // axis có score cao nhất
-    triggered: AxisScore[],         // axes sẽ được execute
-    axes: AxisScore[],              // toàn bộ 10 axes + scores
-    disputeSession: {               // 🛡️ BẮT BUỘC - cuộc chiến giành main agent
+    primary: CapabilityAxis,        // Highest-scoring axis
+    triggered: AxisScore[],         // Axes to be executed
+    axes: AxisScore[],             // All 10 axes + scores
+    disputeSession: {               // REQUIRED - main agent battle
       sessionId: string,
-      winnerId: string,             // Champion được chọn từ 6 candidates
+      winnerId: string,             // Champion selected from 6 candidates
       tournamentId: string,
       status: 'resolved' | 'cancelled',
       participants: 6,              // 2 Worker + 2 Specialist + 1 Manager + 1 Executive
@@ -82,16 +82,16 @@ Auto-invoke khi:
     artifacts?: unknown;
     error?: string;
   }>;
-  userMessage: string;              // Báo cáo tiếng Việt
+  userMessage: string;              // Vietnamese report
 }
 ```
 
 ## Hardened Security Contract
 
 - SessionGuard: required level USER, max 100 req/min
-- Mỗi module execution đều đi qua `SessionGuard.guard()` trước khi chạy
-- AuditLog: mỗi route được log vào `.cursor/autonomous-memory/logs/`
-- KHÔNG bypass security envelope dù là auto-trigger
+- Every module execution goes through `SessionGuard.guard()` before running
+- AuditLog: every route is logged to `.cursor/autonomous-memory/logs/`
+- NEVER bypass the security envelope, even for auto-trigger
 
 ## Code references
 
@@ -100,20 +100,20 @@ Auto-invoke khi:
 - Index: [capability-router/index.ts](../../capability-router/index.ts)
 - Manifest: [.cursor/plugin.json](../../.cursor/plugin.json)
 
-## Ví dụ
+## Examples
 
 ```
-User: "Refactor code của tôi cho sạch hơn"
-Router → primary: recover (fix bug + sửa)
+User: "Refactor my code to be cleaner"
+Router → primary: recover (fix bug + refactor)
        → triggered: [recover, analyze_code, verify]
        → executes: error-recovery → codegraph → verification
 
-User: "Mở Chrome và click Settings"
+User: "Open Chrome and click Settings"
 Router → primary: computer_control
        → triggered: [computer_control]
        → executes: computer-control (keyboard/mouse)
 
-User: "Fix bug và viết test"
+User: "Fix bug and write test"
 Router → primary: recover
        → triggered: [recover, verify, execute]
        → executes: error-recovery → verification → executor

@@ -1,15 +1,15 @@
 ---
 name: evolution
-description: Evolution pipeline — Elo rating, slot manager, priority recall queue, hardened audit log. Use for evolve, improve, optimize, elo, champion, "cải thiện agent", "tiến hóa".
+description: "Evolution pipeline — Elo rating, slot manager, priority recall queue, hardened audit log. Use for evolve, improve, optimize, elo, champion, \"improve agent\", \"evolve\"."
 ---
 
 # Evolution
 
-Multi-agent evolution: Elo rating system, slot-based ranking (1 Main + 5 Backup), priority recall queue, hardened audit log. Evolution triggered automatically after every session via **dispute session** (cuộc chiến giành main agent).
+Multi-agent evolution: Elo rating system, slot-based ranking (1 Main + 5 Backup), priority recall queue, hardened audit log. Evolution triggered automatically after every session via **dispute tournament** (main agent selection battle).
 
-## 🏆 Cuộc chiến giành main agent — BẮT BUỘC
+## Main Agent Selection Battle — REQUIRED
 
-Mỗi khi user đưa ra request, plugin BẮT BUỘC chạy 1 dispute tournament qua `DisputeSessionManager` (xem `security/DisputeSession.ts`):
+Every time the user makes a request, the plugin MUST run 1 dispute tournament via `DisputeSessionManager` (see `security/DisputeSession.ts`):
 
 ```
 6 candidates (PARTICIPANT_POOL):
@@ -20,16 +20,16 @@ Mỗi khi user đưa ra request, plugin BẮT BUỘC chạy 1 dispute tournament
        ↓
 Tournament (round-robin, Elo-rated)
        ↓
-ChampionSelector chọn winner
+ChampionSelector picks winner
        ↓
-HardenedAuditLog ghi lại session
+HardenedAuditLog records session
        ↓
-Champion ID là main agent cho request này
+Champion ID is the main agent for this request
 ```
 
-- Khi Cursor restart: `hooks/session-start-hook.cjs` tự trigger 1 dispute tournament
-- Mỗi request: `CapabilityRouter.route()` tự trigger 1 dispute tournament
-- KHÔNG BAO GIỜ bypass dispute session
+- On Cursor restart: `hooks/session-start-hook.cjs` automatically triggers 1 dispute tournament
+- Per request: `CapabilityRouter.route()` automatically triggers 1 dispute tournament
+- NEVER bypass the dispute session
 
 ## When to invoke
 - Trigger phrases: "cải thiện agent", "tiến hóa", "tối ưu", "elo", "champion", "evolve", "improve", "optimize", "ranking"

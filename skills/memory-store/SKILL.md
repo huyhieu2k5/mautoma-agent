@@ -1,6 +1,6 @@
 ---
 name: memory-store
-description: Lưu trữ và nhớ context — memory manager, context chunker, persistence. Use for remember, memory, context, persist, save, recall, "nhớ lại", "lưu context".
+description: "Storage and context retention — memory manager, context chunker, persistence. Use for remember, memory, context, persist, save, recall, \"nhớ lại\", \"lưu context\"."
 ---
 
 # Memory Store

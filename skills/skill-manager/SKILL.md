@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-description: Tự động tìm, cài đặt và thực thi skills (bao gồm cả Cursor official plugins). Use for install skill, find skill, download skill, add plugin, missing skill, capability, or any request to extend what the agent can do.
+description: "Automatically find, install, and execute skills (including Cursor official plugins). Use for install skill, find skill, download skill, add plugin, missing skill, capability, or any request to extend what the agent can do."
 ---
 
 # Skill Manager

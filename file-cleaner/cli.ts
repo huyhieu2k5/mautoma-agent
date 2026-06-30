@@ -1,5 +1,5 @@
 /**
- * CLI: chạy nhanh file cleaner
+ * CLI: run the file cleaner quickly
  *
  * Usage:
  *   npx tsx file-cleaner/cli.ts [--dry-run] [--verbose] [--scan=dir1,dir2]
