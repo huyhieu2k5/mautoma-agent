@@ -1,5 +1,5 @@
-# GitHub Actions
-/.github/
+# GitHub Actions — workflows ARE committed
+# (removed: /.github/)
 
 # Node modules
 node_modules/

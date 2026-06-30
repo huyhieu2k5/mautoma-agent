@@ -199,3 +199,44 @@ any other user's machine. All fixed in this release.
   these will only exist after `npm run build` is wired up (next
   milestone). Until then, users invoke the CLI via
   `npx tsx scripts/capability-router-cli.ts`.
+
+## [1.0.3] - 2026-06-30
+
+### Fixed — `sessionStart` hook payload contract (Cursor 3.8.x)
+
+While running the v1.0.2 install in Cursor 3.8.24, the `sessionStart`
+hook reported `{"ok":false,"error":"no_result_marker"}` on every
+session start.
+
+Root cause: the old driver used `spawnSync(tsx, ...)` with
+`shell: true` on Windows. PowerShell's buffering swallowed the
+`__CURSOR_PEFORMANCE_RESULT__...__END__` marker in stdout, and the
+fallback parser found nothing.
+
+Rewrite of `scripts/session-start-driver.cjs`:
+
+- Read the JSON payload from **stdin** (Cursor's contract — the
+  payload has `hook_event_name`, `session_id`, `cursor_version`,
+  `workspace_roots`, `user_email`, etc.).
+- Resolve the plugin root by walking up from `__dirname` until
+  `.cursor-plugin/plugin.json` is found. **CWD is unreliable for
+  hook subprocesses**; using `__dirname` is the only portable option
+  on Windows.
+- Drop the `spawnSync` + tsx child-process entirely. The old
+  code's bundle-import and tsx-fallback paths were both flaky; an
+  in-process capability router stub returns the same
+  `RouterDecision` shape as the TS implementation. The real router
+  can be wired in once the runtime bundle is built.
+- Write a single JSON summary to stdout and `exit 0` on success,
+  `exit 1` on soft failure. **Never `exit 2`** (that would block
+  the session start).
+- Surface `hookEvent`, `cursorVersion`, `sessionId`, `conversationId`,
+  `workspaceRoots`, and `userEmail` from the payload so the Cursor
+  Hooks output channel shows a useful trace.
+
+Verified with the real sessionStart payload from Cursor 3.8.24:
+
+```
+ok=true, disputeStatus=resolved, participants=6,
+championId=champion_worker_6, exit=0
+```

@@ -1,0 +1,48 @@
+name: "module: capability-router"
+---
+- any-glob-to-any-file: capability-router/**
+- any-glob-to-any-file: scripts/capability-router-cli.*
+
+name: "module: file-cleaner"
+---
+- any-glob-to-any-file: file-cleaner/**
+
+name: "module: security"
+---
+- any-glob-to-any-file: security/**
+
+name: "module: auto-apply"
+---
+- any-glob-to-any-file: auto-apply/**
+
+name: "module: evolution"
+---
+- any-glob-to-any-file: evolution/**
+
+name: "module: skills"
+---
+- any-glob-to-any-file: skills/**
+
+name: "module: rules"
+---
+- any-glob-to-any-file: rules/**
+
+name: "ci"
+---
+- any-glob-to-any-file: .github/workflows/**
+
+name: "docs"
+---
+- any-glob-to-any-file: *.md
+- any-glob-to-any-file: docs/**
+
+name: "deps"
+---
+- any-glob-to-any-file: package.json
+- any-glob-to-any-file: package-lock.json
+
+name: "tests"
+---
+- any-glob-to-any-file: tests/**
+- any-glob-to-any-file: '**/*.test.ts'
+- any-glob-to-any-file: '**/*.spec.ts'

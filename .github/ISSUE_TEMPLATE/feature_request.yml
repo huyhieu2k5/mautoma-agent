@@ -1,0 +1,39 @@
+name: Feature Request
+description: Suggest a new capability, skill, or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to suggest a new capability axis, skill, or general improvement.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve? Why is it valuable?
+      placeholder: |
+        I'd like the agent to remember which skills I've already enabled so it doesn't re-install them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior you'd like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider? Why this one?
+  - type: input
+    id: axis
+    attributes:
+      label: Related capability axis (if any)
+      description: One of the 10 axes: computer_control, skill_install, task_plan, execute, verify, evolve, remember, analyze_code, recover, orchestrate.
+      placeholder: "remember"

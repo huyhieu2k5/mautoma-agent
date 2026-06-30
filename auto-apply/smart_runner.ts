@@ -19,7 +19,7 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { autoApply, createAutoApplyEngine } from './index';
+import { createAutoApplyEngine } from './index';
 import { createCapabilityRouter, CAPABILITY_AXES } from '../capability-router';
 import { createSkillOrchestrator, getSkillRegistry } from '../skill-manager';
 import { createEvolutionEngine } from '../evolution';
@@ -50,167 +50,177 @@ const BANNER = `
 
 // ==================== CAPABILITY STATUS ====================
 
+/** Safely extract a string message from an unknown thrown value. */
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
+/**
+ * Run a status check and print a row.
+ * Returns true if `fn` succeeded, false otherwise.
+ */
+function statusRow(label: string, fn: () => string, _fallback = 'Not initialized'): boolean {
+  try {
+    const detail = fn();
+    console.log(`  ✅ ${label.padEnd(22)} ${detail}`);
+    return true;
+  } catch (err) {
+    console.log(`  ❌ ${label.padEnd(22)} Error: ${errorMessage(err)}`);
+    return false;
+  }
+}
+
+/** Same as statusRow but uses a ⚠️ marker when the call is expected to be optional. */
+function statusRowSoft(label: string, fn: () => string, fallback = 'Not initialized'): void {
+  try {
+    const detail = fn();
+    console.log(`  ✅ ${label.padEnd(22)} ${detail}`);
+  } catch {
+    console.log(`  ⚠️  ${label.padEnd(22)} ${fallback}`);
+  }
+}
+
 async function showCapabilitiesStatus(): Promise<void> {
   console.log('\n📊 System Capabilities Status\n');
   console.log('─'.repeat(60));
 
   // 1. CapabilityRouter
-  try {
+  statusRow('CapabilityRouter', () => {
     const router = createCapabilityRouter({ defaultLanguage: 'vi' });
     const axes = CAPABILITY_AXES.map((a) => a.axis).join(', ');
-    console.log(`  ✅ CapabilityRouter   — ${CAPABILITY_AXES.length} axes: ${axes}`);
-  } catch (err: any) {
-    console.log(`  ❌ CapabilityRouter   — Error: ${err.message}`);
-  }
+    void router;
+    return `${CAPABILITY_AXES.length} axes: ${axes}`;
+  });
 
   // 2. Skill Manager
-  try {
+  statusRow('SkillManager', () => {
     const registry = getSkillRegistry();
     const skills = registry.getAll();
-    console.log(`  ✅ SkillManager       — ${skills.length} skills loaded`);
     for (const skill of skills.slice(0, 5)) {
       console.log(`     • ${skill.name} (${skill.version})`);
     }
     if (skills.length > 5) console.log(`     ... +${skills.length - 5} more`);
-  } catch (err: any) {
-    console.log(`  ❌ SkillManager       — Error: ${err.message}`);
-  }
+    return `${skills.length} skills loaded`;
+  });
 
   // 3. Memory
-  try {
-    const mem = getMemoryManager();
-    const recent = mem.getRelevantContext ? mem.getRelevantContext('recent', 3) : [];
-    console.log(`  ✅ Memory Store       — ${recent.length} recent entries`);
-  } catch (_) {
-    console.log(`  ⚠️  Memory Store       — Not initialized (will init on first use)`);
-  }
+  statusRowSoft(
+    'Memory Store',
+    () => {
+      const mem = getMemoryManager();
+      const recent = mem.getRelevantContext ? mem.getRelevantContext('recent', 3) : [];
+      return `${recent.length} recent entries`;
+    },
+    'Not initialized (will init on first use)'
+  );
 
   // 4. Evolution
-  try {
-    const evo = createEvolutionEngine();
-    console.log(`  ✅ Evolution Engine   — Ready (self-improving agents)`);
-  } catch (err: any) {
-    console.log(`  ❌ Evolution Engine   — Error: ${err.message}`);
-  }
+  statusRow('Evolution Engine', () => {
+    void createEvolutionEngine();
+    return 'Ready (self-improving agents)';
+  });
 
   // 5. CodeGraph
-  try {
-    const cg = createCodeGraphManager();
-    console.log(`  ✅ CodeGraph          — Ready (code structure analysis)`);
-  } catch (_) {
-    console.log(`  ⚠️  CodeGraph          — Not initialized (will init on first use)`);
-  }
+  statusRowSoft(
+    'CodeGraph',
+    () => {
+      void createCodeGraphManager();
+      return 'Ready (code structure analysis)';
+    },
+    'Not initialized (will init on first use)'
+  );
 
   // 6. TaskPlanner
-  try {
-    const tp = getTaskPlanner();
-    console.log(`  ✅ Task Planner       — Ready (project decomposition)`);
-  } catch (err: any) {
-    console.log(`  ❌ Task Planner       — Error: ${err.message}`);
-  }
+  statusRow('Task Planner', () => {
+    void getTaskPlanner();
+    return 'Ready (project decomposition)';
+  });
 
   // 7. File Cleaner
-  try {
-    console.log(`  ✅ File Cleaner       — Auto-cleanup AI artifacts (BẮT BUỘC)`);
-  } catch (err: any) {
-    console.log(`  ❌ File Cleaner       — Error: ${err.message}`);
-  }
+  statusRow('File Cleaner', () => 'Auto-cleanup AI artifacts (BẮT BUỘC)');
 
   // 8. Workspace analysis
-  try {
-    const cg2 = createCodeGraphManager();
-    const stats = cg2.getStats();
-    console.log(`  ✅ Workspace          — ${stats.totalFiles || 0} files analyzed`);
-  } catch (err: any) {
-    console.log(`  ⚠️  Workspace          — Analysis skipped`);
-  }
+  statusRowSoft(
+    'Workspace',
+    () => {
+      const cg = createCodeGraphManager();
+      const stats = cg.getStats();
+      return `${stats.totalFiles || 0} files analyzed`;
+    },
+    'Analysis skipped'
+  );
 
-  // 9. Computer Control (5 components)
-  try {
-    createComputerControl();
-    createWorkflows();
-    console.log(`  ✅ Computer Control   — 5 components: keyboard/mouse/screen/automation/workflows`);
-  } catch (err: any) {
-    console.log(`  ❌ Computer Control   — Error: ${err.message}`);
-  }
+  // 9. Computer Control
+  statusRow('Computer Control', () => {
+    void createComputerControl();
+    void createWorkflows();
+    return '5 components: keyboard/mouse/screen/automation/workflows';
+  });
 
-  // 10. Verification (LATS + committee + self-RAG)
-  try {
-    createVerificationEngine();
-    console.log(`  ✅ Verification       — LATS tree search + Committee review + Self-RAG`);
-  } catch (err: any) {
-    console.log(`  ❌ Verification       — Error: ${err.message}`);
-  }
+  // 10. Verification
+  statusRow('Verification', () => {
+    void createVerificationEngine();
+    return 'LATS tree search + Committee review + Self-RAG';
+  });
 
-  // 11. Executor (autonomous runner + subagent coordinator)
-  try {
-    getExecutor();
-    console.log(`  ✅ Executor           — Autonomous runner + Subagent coordinator`);
-  } catch (err: any) {
-    console.log(`  ❌ Executor           — Error: ${err.message}`);
-  }
+  // 11. Executor
+  statusRow('Executor', () => {
+    void getExecutor();
+    return 'Autonomous runner + Subagent coordinator';
+  });
 
-  // 12. Error Recovery (pattern DB + retry)
-  try {
-    createErrorLearner();
-    console.log(`  ✅ Error Recovery     — Pattern DB + Retry strategies`);
-  } catch (err: any) {
-    console.log(`  ❌ Error Recovery     — Error: ${err.message}`);
-  }
+  // 12. Error Recovery
+  statusRow('Error Recovery', () => {
+    void createErrorLearner();
+    return 'Pattern DB + Retry strategies';
+  });
 
-  // 13. Agent Orchestration (5 teams + 5-tier escalation)
-  try {
-    createAgentEscalationEngine();
-    createTeamOrchestrator();
-    console.log(`  ✅ Agent Orchestr.    — 5 teams (Supervisor/Arena/Interrogate/Debate/Hierarchical)`);
-  } catch (err: any) {
-    console.log(`  ❌ Agent Orchestr.    — Error: ${err.message}`);
-  }
+  // 13. Agent Orchestration
+  statusRow('Agent Orchestr.', () => {
+    void createAgentEscalationEngine();
+    void createTeamOrchestrator();
+    return '5 teams (Supervisor/Arena/Interrogate/Debate/Hierarchical)';
+  });
 
-  // 14. Evaluation (CLEAR framework)
-  try {
-    getCLEAREvaluator();
-    console.log(`  ✅ CLEAR Evaluator    — Cost/Latency/Efficacy/Assurance/Reliability`);
-  } catch (err: any) {
-    console.log(`  ❌ CLEAR Evaluator    — Error: ${err.message}`);
-  }
+  // 14. CLEAR Evaluation
+  statusRow('CLEAR Evaluator', () => {
+    void getCLEAREvaluator();
+    return 'Cost/Latency/Efficacy/Assurance/Reliability';
+  });
 
-  // 15. Security: SessionGuard
-  try {
-    getSessionGuard({ maxRequestsPerMinute: 60 });
-    console.log(`  ✅ SessionGuard       — HMAC + Rate limit + Audit log`);
-  } catch (err: any) {
-    console.log(`  ❌ SessionGuard       — Error: ${err.message}`);
-  }
+  // 15. SessionGuard
+  statusRow('SessionGuard', () => {
+    void getSessionGuard({ maxRequestsPerMinute: 60 });
+    return 'HMAC + Rate limit + Audit log';
+  });
 
-  // 16. Security: DisputeSession
-  try {
-    getDisputeSessionManager();
-    console.log(`  ✅ DisputeSession     — 6 candidates + Elo champion selection`);
-  } catch (err: any) {
-    console.log(`  ❌ DisputeSession     — Error: ${err.message}`);
-  }
+  // 16. DisputeSession
+  statusRow('DisputeSession', () => {
+    void getDisputeSessionManager();
+    return '6 candidates + Elo champion selection';
+  });
 
-  // 17. Cursor Skills (32 skills in .cursor/skills/)
-  try {
+  // 17. Cursor Skills
+  statusRow('Cursor Skills', () => {
     const skillsDir = path.resolve(__dirname, '..', '.cursor', 'skills');
-    let skillCount = 0;
+    let count = 0;
     if (fs.existsSync(skillsDir)) {
-      skillCount = fs.readdirSync(skillsDir, { withFileTypes: true })
-        .filter((d) => d.isDirectory()).length;
+      count = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).length;
     }
-    console.log(`  ✅ Cursor Skills      — ${skillCount} curated skills (arena, architect, tdd, etc.)`);
-  } catch (err: any) {
-    console.log(`  ❌ Cursor Skills      — Error: ${err.message}`);
-  }
+    return `${count} curated skills (arena, architect, tdd, etc.)`;
+  });
 
   // 18. Skill Orchestrator
-  try {
-    createSkillOrchestrator({});
-    console.log(`  ✅ Skill Orchestr.    — Multi-skill execution plans`);
-  } catch (err: any) {
-    console.log(`  ❌ Skill Orchestr.    — Error: ${err.message}`);
-  }
+  statusRow('Skill Orchestr.', () => {
+    void createSkillOrchestrator({});
+    return 'Multi-skill execution plans';
+  });
 
   console.log('─'.repeat(60));
   console.log('\n  📌 Nhập yêu cầu bằng tiếng Việt hoặc tiếng Anh!');
@@ -235,6 +245,7 @@ async function interactiveMode(): Promise<void> {
   // Show capabilities on start
   await showCapabilitiesStatus();
 
+  // eslint-disable-next-line no-constant-condition -- intentional interactive loop, breaks on 'quit'/'exit'/'q'
   while (true) {
     try {
       const input = await prompt();
@@ -294,8 +305,8 @@ async function interactiveMode(): Promise<void> {
       console.log(`   Axes triggered: ${result.axesTriggered.join(', ') || 'none'}`);
       console.log(`   Duration: ${Math.round(result.durationMs / 1000)}s`);
       console.log(`   Status: ${result.success ? '✅ SUCCESS' : '⚠️ COMPLETED WITH ERRORS'}`);
-    } catch (err: any) {
-      console.error(`\n❌ Error: ${err.message}`);
+    } catch (err) {
+      console.error(`\n❌ Error: ${errorMessage(err)}`);
     }
   }
 }

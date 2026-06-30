@@ -7,7 +7,8 @@
   },
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -20,8 +21,22 @@
     "no-undef": "off",
     "no-prototype-builtins": "off",
     "no-empty": ["error", { "allowEmptyCatch": true }],
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-explicit-any": "warn"
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ImportExpression",
+        "message": "Avoid inline imports (await import('...')). Use top-level imports instead. See rules/no-inline-imports.mdc."
+      }
+    ]
   },
   "overrides": [
     {
@@ -50,10 +65,9 @@
       }
     },
     {
-      "files": ["tests/**/*.ts", "**/*.test.ts"],
+      "files": ["tests/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
       "env": {
-        "node": true,
-        "jest": false
+        "node": true
       },
       "rules": {
         "no-console": "off",

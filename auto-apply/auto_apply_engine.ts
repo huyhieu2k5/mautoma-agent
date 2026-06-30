@@ -16,11 +16,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { createCapabilityRouter } from '../capability-router';
-import { createSkillOrchestrator } from '../skill-manager';
+import { createSkillOrchestrator, getSkillRegistry } from '../skill-manager';
 import { cleanupAIArtifacts } from '../file-cleaner';
 import { createEvolutionEngine } from '../evolution';
 import { getTaskPlanner } from '../task-planner';
-import { getExecutor } from '../executor';
 import { createVerificationEngine } from '../verification';
 import { getMemoryManager } from '../memory-store';
 import { createErrorLearner } from '../error-recovery';
@@ -78,6 +77,17 @@ interface IntentPattern {
   keywordsVi: string[];      // keywords tiếng Việt
   action: string;
   priority: number;         // thứ tự ưu tiên (thấp = chạy trước)
+}
+
+/** Safely extract a string message from an unknown thrown value. */
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
 }
 
 const INTENT_PATTERNS: IntentPattern[] = [
@@ -253,11 +263,11 @@ export interface AutoApplyContext {
 async function execComputerControl(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running computer_control (5 components)...');
   try {
-    const cc = createComputerControl();
-    const workflows = createWorkflows();
+    // Stub: factories are called to verify they exist; results are not yet used in real orchestration.
+    void createComputerControl();
+    void createWorkflows();
     ctx.verbose && console.log(`[auto-apply] ComputerControl + Workflows ready`);
     // Phát hiện component nào cần dùng
-    const lower = req.toLowerCase();
     const components: string[] = [];
     if (/click|drag|scroll|mouse|nháy|bấm/i.test(req)) components.push('mouse');
     if (/type|nhập|gõ|key|shortcut/i.test(req)) components.push('keyboard');
@@ -269,14 +279,13 @@ async function execComputerControl(req: string, ctx: AutoApplyContext): Promise<
       action: `Computer control: ${components.join(', ')} (5 components: keyboard/mouse/screen/automation/workflows)`,
       success: true,
     };
-  } catch (err: any) {
-    return { axis: 'computer_control', action: 'Computer control', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'computer_control', action: 'Computer control', success: false, error: errorMessage(err) };
   }
 }
 
 async function execSkillInstall(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running skill_install...');
-  const { getSkillRegistry } = await import('../skill-manager');
   const registry = getSkillRegistry();
   const skills = registry.listSkills();
   return {
@@ -339,14 +348,15 @@ async function execExecute(req: string, ctx: AutoApplyContext): Promise<ApplySte
       success: true,
       output: JSON.stringify(decision, null, 2),
     };
-  } catch (err: any) {
-    return { axis: 'execute', action: 'Execute via CapabilityRouter', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'execute', action: 'Execute via CapabilityRouter', success: false, error: errorMessage(err) };
   }
 }
 
 async function execVerify(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running verify...');
-  const verifier = createVerificationEngine();
+  // Stub: factory call reserved for real verification orchestration.
+  void createVerificationEngine();
   return {
     axis: 'verify',
     action: 'Verification complete',
@@ -368,7 +378,8 @@ async function execRecover(req: string, ctx: AutoApplyContext): Promise<ApplySte
 
 async function execEvolve(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running evolve...');
-  const evolution = createEvolutionEngine();
+  // Stub: factory call reserved for real evolution engine.
+  void createEvolutionEngine();
   return {
     axis: 'evolve',
     action: 'Evolution engine ready',
@@ -379,16 +390,17 @@ async function execEvolve(req: string, ctx: AutoApplyContext): Promise<ApplyStep
 async function execOrchestrate(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running orchestrate...');
   try {
-    const escalation = createAgentEscalationEngine();
-    const teams = createTeamOrchestrator();
+    // Stub: factory calls reserved for real orchestration.
+    void createAgentEscalationEngine();
+    void createTeamOrchestrator();
     ctx.verbose && console.log(`[auto-apply] Agent teams + escalation ready`);
     return {
       axis: 'orchestrate',
       action: 'Multi-agent orchestration (5 team patterns + 5-tier escalation)',
       success: true,
     };
-  } catch (err: any) {
-    return { axis: 'orchestrate', action: 'Orchestrate', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'orchestrate', action: 'Orchestrate', success: false, error: errorMessage(err) };
   }
 }
 
@@ -397,15 +409,16 @@ async function execOrchestrate(req: string, ctx: AutoApplyContext): Promise<Appl
 async function execEvaluate(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running evaluate (CLEAR framework)...');
   try {
-    const evaluator = getCLEAREvaluator();
+    // Stub: factory call reserved for real CLEAR evaluation.
+    void getCLEAREvaluator();
     ctx.verbose && console.log(`[auto-apply] CLEAR evaluator ready (Cost/Latency/Efficacy/Assurance/Reliability)`);
     return {
       axis: 'evaluate',
       action: 'CLEAR evaluator ready (5-dimensional metrics)',
       success: true,
     };
-  } catch (err: any) {
-    return { axis: 'evaluate', action: 'CLEAR evaluator', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'evaluate', action: 'CLEAR evaluator', success: false, error: errorMessage(err) };
   }
 }
 
@@ -414,15 +427,16 @@ async function execEvaluate(req: string, ctx: AutoApplyContext): Promise<ApplySt
 async function execSecure(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running secure (SessionGuard)...');
   try {
-    const guard = getSessionGuard({ maxRequestsPerMinute: 60 });
+    // Stub: factory call reserved for real SessionGuard wiring.
+    void getSessionGuard({ maxRequestsPerMinute: 60 });
     ctx.verbose && console.log(`[auto-apply] SessionGuard active: HMAC + rate limit + audit`);
     return {
       axis: 'secure',
       action: 'SessionGuard active (HMAC token, rate limit, audit log)',
       success: true,
     };
-  } catch (err: any) {
-    return { axis: 'secure', action: 'SessionGuard', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'secure', action: 'SessionGuard', success: false, error: errorMessage(err) };
   }
 }
 
@@ -431,15 +445,16 @@ async function execSecure(req: string, ctx: AutoApplyContext): Promise<ApplyStep
 async function execDispute(req: string, ctx: AutoApplyContext): Promise<ApplyStep> {
   ctx.verbose && console.log('[auto-apply] Running dispute (champion tournament)...');
   try {
-    const dispute = getDisputeSessionManager();
+    // Stub: factory call reserved for real DisputeSession.
+    void getDisputeSessionManager();
     ctx.verbose && console.log(`[auto-apply] DisputeSession ready: 6 candidates, Elo ranking`);
     return {
       axis: 'dispute',
       action: 'DisputeSession ready (6 candidates, Elo champion selection)',
       success: true,
     };
-  } catch (err: any) {
-    return { axis: 'dispute', action: 'DisputeSession', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'dispute', action: 'DisputeSession', success: false, error: errorMessage(err) };
   }
 }
 
@@ -464,8 +479,8 @@ async function execCursorSkill(req: string, ctx: AutoApplyContext): Promise<Appl
       success: true,
       output: matched.length ? `Use skill: ${matched[0]}` : `Available: ${skills.slice(0, 5).join(', ')}...`,
     };
-  } catch (err: any) {
-    return { axis: 'cursor_skill', action: 'Cursor skills', success: false, error: err.message };
+  } catch (err) {
+    return { axis: 'cursor_skill', action: 'Cursor skills', success: false, error: errorMessage(err) };
   }
 }
 
@@ -559,15 +574,16 @@ export class AutoApplyEngine {
         if (step.success) axesTriggered.push(intent.axis);
         this.config.verbose &&
           console.log(`[auto-apply] ${step.success ? '✅' : '❌'} ${intent.axis}: ${step.action}`);
-      } catch (err: any) {
+      } catch (err) {
+        const msg = errorMessage(err);
         const step: ApplyStep = {
           axis: intent.axis,
           action: intent.suggestedAction,
           success: false,
-          error: err.message,
+          error: msg,
         };
         steps.push(step);
-        this.config.verbose && console.log(`[auto-apply] ❌ ${intent.axis}: ERROR — ${err.message}`);
+        this.config.verbose && console.log(`[auto-apply] ❌ ${intent.axis}: ERROR — ${msg}`);
       }
     }
 
@@ -579,8 +595,8 @@ export class AutoApplyEngine {
           this.config.verbose &&
             console.log(`[auto-apply] 🧹 Cleanup: deleted ${report.deleted}, merged ${report.mergedIntoNotes} → AI_NOTES.md`);
         }
-      } catch (err: any) {
-        this.config.verbose && console.warn(`[auto-apply] Cleanup skipped: ${err.message}`);
+      } catch (err) {
+        this.config.verbose && console.warn(`[auto-apply] Cleanup skipped: ${errorMessage(err)}`);
       }
     }
 

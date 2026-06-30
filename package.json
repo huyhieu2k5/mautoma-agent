@@ -17,11 +17,19 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "npm run typecheck"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,cjs,mjs,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,cjs,mjs,json,md,yml,yaml}\"",
+    "validate:manifest": "tsx scripts/validate-plugin-manifest.mts",
+    "validate:skills": "tsx scripts/validate-skills.mts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepare": "npm run build"
   },
   "bin": {
-    "capability-router": "./scripts/capability-router-cli.js",
-    "mautoma-agent": "./scripts/agent-cli.js"
+    "capability-router": "./dist/scripts/capability-router-cli.js",
+    "mautoma-agent": "./dist/agent_cli.js"
   },
   "keywords": [
     "cursor",
@@ -77,13 +85,24 @@
     "tsconfig.json"
   ],
   "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "gray-matter": "^4.0.3",
+    "husky": "^9.1.7",
     "jsonc-parser": "^3.3.1",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^1.6.0"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -10,7 +10,8 @@ import { cleanupAIArtifacts, removeNote } from './index';
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const verbose = !args.includes('--quiet');
+  const quiet = args.includes('--quiet');
+  const verbose = !quiet;
   const scanArg = args.find((a) => a.startsWith('--scan='));
   const scanDirs = scanArg ? scanArg.split('=')[1].split(',') : [];
   const removeArg = args.find((a) => a.startsWith('--remove-note='));
@@ -37,7 +38,7 @@ async function main() {
   }
   console.log('═══════════════════════════════════════\n');
 
-  if (report.details.length > 0) {
+  if (report.details.length > 0 && !quiet) {
     console.log('Details:');
     for (const item of report.details) {
       const icon =

@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+*.tsbuildinfo
+CHANGELOG.md
+LICENSE
+runtime/lib
+runtime/bin
+.cursor/autonomous-memory
+.cursor/skills
+skills/test-skill-*/
